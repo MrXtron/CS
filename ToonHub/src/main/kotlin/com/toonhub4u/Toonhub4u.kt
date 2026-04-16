@@ -20,18 +20,34 @@ class Toonhub4u : MainAPI() {
     override val supportedTypes       = setOf(TvType.Movie,TvType.Anime,TvType.Cartoon)
 
     override val mainPage = mainPageOf(
+        
+        "category/language/hindi" to "Hindi Language",
         "category/anime/anime-series" to "Anime Series",
         "category/anime/anime-movies" to "Anime Movies",
         "category/animated/animation-movies" to "Animated Movies",
         "category/animated/animated-series" to "Animated Series",
         "category/channel-list/cartoon-network" to "Cartoon Network",
         "category/channel-list/disney-xd-india" to "Disney XD India",
-        "category/channel-list/disney" to "Disney",
+        "category/channel-list/disney" to "Disney+",
+        "category/channel-list/disny-channel-india" to "Disney Channel India",
+        "category/channel-list/hungama" to "Hungama",
+        "category/channel-list/just-kids-sahara-tv" to "Just Kids - Sahara TV",
+        "category/channel-list/marvel-hq" to "Marvel HQ",
+        "category/channel-list/sony-yay" to "Sony Yay",
+        "category/channel-list/nick-india" to "Nick India",
+        "category/channel-list/sonic-nickelodean" to "Sonic Nickelodean",
+        "category/channel-list/etv-bal-bharat" to "ETV Bal Bharat",
+        "category/channel-list/big-magic" to "Big Magic",
+        "category/channel-list/kinds-zone-pluse" to "Kinds Zone Pluse",
         "category/ott-network/crunchyroll" to "Crunchyroll",
+        "category/ott-network/animetimes" to "Animetimes",
         "category/ott-network/amazon-prime-video" to "Amazon Prime Video",
         "category/ott-network/netflix" to "Netflix",
+        "category/ott-network/hotstar-2" to "Hotstar",
         "category/ott-network/jio-cinema" to "Jio Cinema",
-        "category/language/hindi" to "Hindi Language"
+        "category/ott-network/zee5" to "Zee5",
+        "category/ott-network/Apple-tv" to "Apple TV",
+        "category/gener/18" to "18+ Adult"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
