@@ -36,7 +36,6 @@ class Toonhub4u : MainAPI() {
         "category/channel-list/nick-india" to "Nick India",
         "category/channel-list/sonic-nickelodean" to "Sonic Nickelodean",
         "category/channel-list/etv-bal-bharat" to "ETV Bal Bharat",
-        "category/channel-list/big-magic" to "Big Magic",
         "category/channel-list/kinds-zone-pluse" to "Kinds Zone Pluse",
         "category/ott-network/crunchyroll" to "Crunchyroll",
         "category/ott-network/animetimes" to "Animetimes",
