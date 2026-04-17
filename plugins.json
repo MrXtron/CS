@@ -1,0 +1,206 @@
+[
+    {
+        "url": "https://raw.githubusercontent.com/MrXtron/CS/builds/Bollyzone.cs3",
+        "status": 1,
+        "version": 3,
+        "name": "Bollyzone",
+        "internalName": "Bollyzone",
+        "authors": [
+            "MrXtron"
+        ],
+        "description": "BollyZone",
+        "fileSize": 31130,
+        "repositoryUrl": "https://github.com/MrXtron/CS",
+        "language": "hi",
+        "tvTypes": [
+            "Movie",
+            "TvSeries"
+        ],
+        "iconUrl": "https://raw.githubusercontent.com/MrXtron/CSF/refs/heads/main/Icons/BollyZone.png",
+        "apiVersion": 1,
+        "fileHash": "sha256-51f88e639cf536ecf3d4be7ab8e08f44750e164842919a960b2310897c7d7316",
+        "jarFileSize": 129161,
+        "jarUrl": "https://raw.githubusercontent.com/MrXtron/CS/builds/Bollyzone.jar",
+        "jarHash": "sha256-c6109badc5a7fb18499cfe51c06708f810f576ea7b82bd71d144a8303c4d653b"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/MrXtron/CS/builds/DudeFilms.cs3",
+        "status": 1,
+        "version": 6,
+        "name": "DudeFilms",
+        "internalName": "DudeFilms",
+        "authors": [
+            "Phisher98"
+        ],
+        "description": "Watch Movies & TvSeries (Multi-Lang)",
+        "fileSize": 68670,
+        "repositoryUrl": "https://github.com/MrXtron/CS",
+        "language": "hi",
+        "tvTypes": [
+            "Movie",
+            "TvSeries"
+        ],
+        "iconUrl": "https://raw.githubusercontent.com/MrXtron/CSF/refs/heads/main/Icons/dudefilms.png",
+        "apiVersion": 1,
+        "fileHash": "sha256-9aa11140b5fb9ab2524eed73e86e628b0d83af4f4ac4275b2730652225aa33dd"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/MrXtron/CS/builds/HDhub4u.cs3",
+        "status": 1,
+        "version": 47,
+        "name": "HDhub4u",
+        "internalName": "HDhub4u",
+        "authors": [
+            "Phisher98"
+        ],
+        "fileSize": 79947,
+        "repositoryUrl": "https://github.com/MrXtron/CS",
+        "language": "hi",
+        "tvTypes": [
+            "Movie",
+            "TvSeries",
+            "Anime"
+        ],
+        "iconUrl": "https://raw.githubusercontent.com/MrXtron/CSF/refs/heads/main/Icons/HDHUB.png",
+        "apiVersion": 1,
+        "fileHash": "sha256-ebdc62fee00ed34bb695987e15a75f4b0e1b249a0ab2e0b72b6c00cae75ce779"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/MrXtron/CS/builds/HdMovie2.cs3",
+        "status": 1,
+        "version": 2,
+        "name": "HdMovie2",
+        "internalName": "HdMovie2",
+        "authors": [
+            "-"
+        ],
+        "description": "Includes: Hdmovie2",
+        "fileSize": 39165,
+        "repositoryUrl": "https://github.com/MrXtron/CS",
+        "language": "hi",
+        "tvTypes": [
+            "TvSeries",
+            "Movie"
+        ],
+        "iconUrl": "https://raw.githubusercontent.com/MrXtron/CSF/refs/heads/main/Icons/HDMovie2.png",
+        "apiVersion": 1,
+        "fileHash": "sha256-533581bf8975607619f3a12ca3a8884e0e9a3604e36d84b3c8a45a08704366dd",
+        "jarFileSize": 193211,
+        "jarUrl": "https://raw.githubusercontent.com/MrXtron/CS/builds/HdMovie2.jar",
+        "jarHash": "sha256-c3735dcd24609b9dfd344831c3cdfcd81531c478cde2b4ab62eed3fb8947a7b3"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/MrXtron/CS/builds/MovieBoxProvider.cs3",
+        "status": 1,
+        "version": 18,
+        "name": "MovieBoxProvider",
+        "internalName": "MovieBoxProvider",
+        "authors": [
+            "NivinCNC,Phisher98"
+        ],
+        "description": "Multi Language Movies and Series Provider",
+        "fileSize": 68756,
+        "repositoryUrl": "https://github.com/MrXtron/CS",
+        "language": "hi",
+        "tvTypes": [
+            "Movie",
+            "TvSeries"
+        ],
+        "iconUrl": "https://raw.githubusercontent.com/MrXtron/CSF/refs/heads/main/Icons/MovieBox.png",
+        "apiVersion": 1,
+        "fileHash": "sha256-e438ca1daafc24bc11ebcca57a6507d2a31cd5aa4be14d00214c9d1aba1dfa8f"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/MrXtron/CS/builds/MultiMoviesProvider.cs3",
+        "status": 1,
+        "version": 49,
+        "name": "MultiMoviesProvider",
+        "internalName": "MultiMoviesProvider",
+        "authors": [
+            "Phisher98"
+        ],
+        "description": "Indian Multi-language HD Provider",
+        "fileSize": 46866,
+        "repositoryUrl": "https://github.com/MrXtron/CS",
+        "language": "hi",
+        "tvTypes": [
+            "Movie",
+            "TvSeries",
+            "Anime"
+        ],
+        "iconUrl": "https://raw.githubusercontent.com/MrXtron/CSF/refs/heads/main/Icons/MultiMoviesProvider.png",
+        "apiVersion": 1,
+        "fileHash": "sha256-d5046539fed6d5f5a39201f9c461830edc66ac5d8ba5e08e2b6a68b2c615a25e",
+        "jarFileSize": 199511,
+        "jarUrl": "https://raw.githubusercontent.com/MrXtron/CS/builds/MultiMoviesProvider.jar",
+        "jarHash": "sha256-34438e82f2b2443fdb8adeb3f35d2ce63c462c43ea4fdd17676eec6cf30c049f"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/MrXtron/CS/builds/RadioIndiaProvider.cs3",
+        "status": 1,
+        "version": 3,
+        "name": "RadioIndiaProvider",
+        "internalName": "RadioIndiaProvider",
+        "authors": [
+            "NivinCNC"
+        ],
+        "description": "Radio India Provider",
+        "fileSize": 17617,
+        "repositoryUrl": "https://github.com/MrXtron/CS",
+        "language": "ta",
+        "tvTypes": [
+            "Live"
+        ],
+        "iconUrl": "https://cdn.mytuner.mobi/static/ctr/icons/App_192x192/in.png",
+        "apiVersion": 1,
+        "fileHash": "sha256-24b2d78095058c18a4d98e989a56276abfa146f2849996e6864f54075ce8fb6d"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/MrXtron/CS/builds/RogMovies.cs3",
+        "status": 1,
+        "version": 2,
+        "name": "RogMovies",
+        "internalName": "RogMovies",
+        "authors": [
+            "MrXtron"
+        ],
+        "description": "Indian Content",
+        "fileSize": 37955,
+        "repositoryUrl": "https://github.com/MrXtron/CS",
+        "language": "hi",
+        "tvTypes": [
+            "TvSeries",
+            "Movie",
+            "AsianDrama",
+            "Anime"
+        ],
+        "iconUrl": "https://raw.githubusercontent.com/MrXtron/CSF/refs/heads/main/Icons/RogMovies.png",
+        "apiVersion": 1,
+        "fileHash": "sha256-46857dc4ac0690fb8cdd7f7f99c7b82b00b7c164de81aecd3ee6ac31928432f6"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/MrXtron/CS/builds/ToonHub.cs3",
+        "status": 1,
+        "version": 10,
+        "name": "ToonHub",
+        "internalName": "ToonHub",
+        "authors": [
+            "MrXtron"
+        ],
+        "description": "ToonHub4u Multi Language",
+        "fileSize": 23213,
+        "repositoryUrl": "https://github.com/MrXtron/CS",
+        "language": "hi",
+        "tvTypes": [
+            "AnimeMovie",
+            "Anime",
+            "Cartoon"
+        ],
+        "iconUrl": "https://toonhub4u.me/wp-content/uploads/2024/02/Untitled.png",
+        "apiVersion": 1,
+        "fileHash": "sha256-2665c13ddc469283e51598921a6f3eebf6fdeec023013be7595bc1644e89d718",
+        "jarFileSize": 88933,
+        "jarUrl": "https://raw.githubusercontent.com/MrXtron/CS/builds/ToonHub.jar",
+        "jarHash": "sha256-cc95d057f338b2aa15f7973fb286c9e198ef56a0c93a72e00c9009cd17b3005e"
+    }
+]
