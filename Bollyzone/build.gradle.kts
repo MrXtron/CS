@@ -1,3 +1,7 @@
+// use an integer for version numbers
+version = 2
+
+
 cloudstream {
     language = "hi"
     description = "BollyZone"
