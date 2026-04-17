@@ -7,7 +7,7 @@ cloudstream {
 
     description = "ToonHub4u Multi Language"
     language    = "hi"
-    authors = listOf("Phisher98")
+    authors = listOf("MrXtron")
 
     /**
     * Status int as the following:
