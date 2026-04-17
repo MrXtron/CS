@@ -5,7 +5,7 @@ version = 2
 cloudstream {
     language = "hi"
     description = "BollyZone"
-    authors = listOf("Phisher98")
+    authors = listOf("MrXtron")
 
     status = 1 
     tvTypes = listOf(
