@@ -31,7 +31,6 @@ class Toonhub4u : MainAPI() {
         "category/channel-list/disney" to "Disney+",
         "category/channel-list/disny-channel-india" to "Disney Channel India",
         "category/channel-list/hungama" to "Hungama",
-        "category/channel-list/just-kids-sahara-tv" to "Just Kids - Sahara TV",
         "category/channel-list/marvel-hq" to "Marvel HQ",
         "category/channel-list/sony-yay" to "Sony Yay",
         "category/channel-list/nick-india" to "Nick India",

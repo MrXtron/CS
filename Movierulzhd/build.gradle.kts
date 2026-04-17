@@ -22,7 +22,7 @@ cloudstream {
         "Movie",
     )
 
-    iconUrl = "https://raw.githubusercontent.com/phisher98/cloudstream-extensions-phisher/refs/heads/master/Movierulzhd/faviconV2.png"
+    iconUrl = "https://raw.githubusercontent.com/MrXtron/CSF/refs/heads/main/Icons/Movierulzhd.png"
 
     isCrossPlatform = true
 }

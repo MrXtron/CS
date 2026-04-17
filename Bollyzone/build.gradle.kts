@@ -13,7 +13,7 @@ cloudstream {
         "TvSeries"
     )
 
-    iconUrl = "https://raw.githubusercontent.com/leopaas/CSF/refs/heads/main/Icons/BollyZone.png"
+    iconUrl = "https://raw.githubusercontent.com/MrXtron/CSF/refs/heads/main/Icons/BollyZone.png"
 
     isCrossPlatform = true
 }

@@ -22,5 +22,5 @@ cloudstream {
         "Anime"
     )
 
-    iconUrl = "https://raw.githubusercontent.com/leopaas/CS/refs/heads/master/RogMovies/icon.png"
+    iconUrl = "https://raw.githubusercontent.com/MrXtron/CSF/refs/heads/main/Icons/RogMovies.png"
 }

@@ -20,7 +20,7 @@ cloudstream {
         "TvSeries",
     )
     language = "hi"
-    iconUrl= "https://raw.githubusercontent.com/phisher98/TVVVV/refs/heads/main/Icons/dudefilms.png"
+    iconUrl= "https://raw.githubusercontent.com/MrXtron/CSF/refs/heads/main/Icons/dudefilms.png"
 
 
     isCrossPlatform = false
