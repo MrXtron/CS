@@ -3,26 +3,11 @@ package com.hdmovie2
 import com.lagradost.cloudstream3.* 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.lagradost.api.Log
-import com.lagradost.cloudstream3.HomePageResponse
-import com.lagradost.cloudstream3.MainAPI
-import com.lagradost.cloudstream3.MainPageRequest
-import com.lagradost.cloudstream3.Score
-import com.lagradost.cloudstream3.SearchResponse
-import com.lagradost.cloudstream3.SubtitleFile
-import com.lagradost.cloudstream3.TvType
-import com.lagradost.cloudstream3.amap
-import com.lagradost.cloudstream3.app
-import com.lagradost.cloudstream3.fixUrl
-import com.lagradost.cloudstream3.fixUrlNull
-import com.lagradost.cloudstream3.mainPageOf
-import com.lagradost.cloudstream3.newHomePageResponse
-import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import kotlinx.coroutines.runBlocking
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Element
 import java.util.Calendar
 
 open class HDMovie2Provider : MainAPI() {
@@ -54,7 +39,7 @@ open class HDMovie2Provider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val ajaxUrl = "$directUrl/wp-admin/admin-ajax.php"
+        val ajaxUrl = "$mainUrl/wp-admin/admin-ajax.php"
         val commonHeaders = mapOf(
             "Accept" to "*/*",
             "X-Requested-With" to "XMLHttpRequest"
@@ -83,10 +68,8 @@ open class HDMovie2Provider : MainAPI() {
                 loadData.type.orEmpty()
             )
 
-            when {
-                !source.contains("youtube") -> {
-                    loadExtractor(source, "$directUrl/", subtitleCallback, callback)
-                }
+            if (!source.contains("youtube")) {
+                loadExtractor(source, "$mainUrl/", subtitleCallback, callback)
             }
         } else {
             val document = app.get(data).document
@@ -99,15 +82,13 @@ open class HDMovie2Provider : MainAPI() {
                     val source = fetchSource(id, nume, type)
                     when {
                         source.contains("ok.ru") -> {
-                            loadExtractor("https:$source", "$directUrl/", subtitleCallback, callback)
+                            loadExtractor("https:$source", "$mainUrl/", subtitleCallback, callback)
                         }
                         !source.contains("youtube") -> {
-                            loadExtractor(source, "$directUrl/", subtitleCallback, callback)
+                            loadExtractor(source, "$mainUrl/", subtitleCallback, callback)
                         }
-
                         else -> {
-                            Log.d("Error:","Not Found")
-
+                            Log.d("Error:", "Not Found")
                         }
                     }
                 }
@@ -121,17 +102,17 @@ open class HDMovie2Provider : MainAPI() {
                     val label = element.selectFirst("button")?.text()?.trim() ?: return@forEach
                     val href = element.attr("href")
                     if (label.contains("GDFlix", ignoreCase = true)) {
-                        val redirectedurl= app.get(href, allowRedirects = false).headers["location"] ?:""
-                        loadExtractor(redirectedurl,name,subtitleCallback, callback)
+                        val redirectedurl = app.get(href, allowRedirects = false).headers["location"] ?: ""
+                        if (redirectedurl.isNotEmpty()) {
+                            loadExtractor(redirectedurl, it, subtitleCallback, callback)
+                        }
                     }
                 }
             }
-            return true
         }
 
         return true
     }
-
 
     private fun String.getIframe(): String {
         return Jsoup.parse(this).select("iframe").attr("src")
@@ -147,5 +128,4 @@ open class HDMovie2Provider : MainAPI() {
         @JsonProperty("embed_url") val embed_url: String,
         @JsonProperty("type") val type: String?,
     )
-
 }

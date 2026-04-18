@@ -4,14 +4,13 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.plugins.BasePlugin
 import com.lagradost.cloudstream3.plugins.CloudstreamPlugin
-import com.lagradost.cloudstream3.utils.AppUtils.parsedSafe // Ensure this is imported
+import com.lagradost.cloudstream3.utils.AppUtils.parsedSafe
 
 @CloudstreamPlugin
 class HDMovie2Plugin : BasePlugin() {
     override fun load() {
-        registerMainAPI(HDMovie2())
+        registerMainAPI(HDMovie2Provider())
         
-        // Register custom extractors
         registerExtractorAPI(FMHD())
         registerExtractorAPI(Akamaicdn())
         registerExtractorAPI(Luluvdo())
@@ -21,7 +20,6 @@ class HDMovie2Plugin : BasePlugin() {
         registerExtractorAPI(GDFlix())
         registerExtractorAPI(Movierulzups())
         registerExtractorAPI(Movierulz())
-        // registerExtractorAPI(VidStack()) // Recommended: Remove if using the app's built-in version
         registerExtractorAPI(HDm2())
         registerExtractorAPI(cherryMovierulzups())
     }
@@ -37,7 +35,6 @@ class HDMovie2Plugin : BasePlugin() {
             if (cachedDomains != null && !forceRefresh) return cachedDomains
 
             return try {
-                // Fetch and cache the result
                 app.get(DOMAINS_URL).parsedSafe<Domains>().also {
                     cachedDomains = it
                 }
