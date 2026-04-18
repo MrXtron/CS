@@ -50,7 +50,6 @@ class Dudefilms : MainAPI() {
     }
 
     override val mainPage = mainPageOf(
-        "" to "HomePage",
         "category/bollywood" to "Bollywood",
         "category/hollywood" to "Hollywood",
         "category/southindian" to "South Indian",
