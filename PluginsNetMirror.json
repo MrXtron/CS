@@ -19,7 +19,6 @@
             "Anime"
         ],
         "iconUrl": "https://github.com/SaurabhKaperwan/CSX/raw/refs/heads/master/NetflixMirrorProvider/icon.png",
-        "apiVersion": 1,
-        "fileHash": "sha256-a47e132b81aa471e1ebe8f9016ca2c43a1aa859a3746eaa66f5dbbf61feb4d3c"
+        "apiVersion": 1
     }
 ]
