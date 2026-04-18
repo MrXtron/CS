@@ -55,6 +55,7 @@ class Dudefilms : MainAPI() {
         "category/southindian" to "South Indian",
         "category/webseries" to "Web Series",
         "category/dual-audio" to "Dual Audio",
+        "category/fan-dubbed" to "Fan Dubbed",
         "category/adult/" to "Adult",
     )
 
