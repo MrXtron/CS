@@ -1,4 +1,4 @@
-package com.phisher98
+package com.hdmovie2
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.lagradost.api.Log
@@ -23,10 +23,10 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import java.util.Calendar
 
-open class Hdmovie2 : Movierulzhd() {
+open class HDMovie2Provider : MainAPI() {
 
     override var mainUrl: String = runBlocking {
-        MovierulzhdPlugin.getDomains()?.hdmovie2 ?: "https://hdmovie2.equipment"
+        HDMovie2Plugin.getDomains()?.hdmovie2 ?: "https://hdmovie2.equipment"
     }
     override var name = "Hdmovie2"
     override val mainPage = mainPageOf(

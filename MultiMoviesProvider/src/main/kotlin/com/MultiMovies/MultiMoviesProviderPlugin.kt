@@ -1,4 +1,4 @@
-package com.phisher98
+package com.MultiMovies
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.lagradost.cloudstream3.plugins.BasePlugin
@@ -40,7 +40,7 @@ class MultiMoviesProviderPlugin: BasePlugin() {
 
     companion object {
         private const val DOMAINS_URL =
-            "https://raw.githubusercontent.com/phisher98/TVVVV/refs/heads/main/domains.json"
+            "https://raw.githubusercontent.com/MrXtron/CSF/refs/heads/main/domains.json"
         var cachedDomains: Domains? = null
 
         suspend fun getDomains(forceRefresh: Boolean = false): Domains? {

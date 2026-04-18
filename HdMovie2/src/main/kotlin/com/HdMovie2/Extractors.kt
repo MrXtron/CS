@@ -1,4 +1,4 @@
-package com.phisher98
+package com.hdmovie2
 
 import com.lagradost.api.Log
 import com.lagradost.cloudstream3.SubtitleFile
