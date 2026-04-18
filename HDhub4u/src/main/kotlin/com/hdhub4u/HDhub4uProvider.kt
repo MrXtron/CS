@@ -57,7 +57,6 @@ class HDhub4uProvider : MainAPI() {
     }
 
     override val mainPage = mainPageOf(
-        "" to "Latest",
         "/category/bollywood-movies/" to "Bollywood",
         "/category/hollywood-movies/" to "Hollywood",
         "/category/hindi-dubbed/" to "Hindi Dubbed",
