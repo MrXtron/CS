@@ -10,7 +10,7 @@ import com.lagradost.cloudstream3.plugins.CloudstreamPlugin
 class HDMovie2Plugin: BasePlugin() {
     override fun load() {
         // All providers should be added in this manner. Please don't edit the providers list directly.
-        registerMainAPI(HDMovie2Provider())
+        registerMainAPI(HDMovie2())
         registerExtractorAPI(FMHD())
         registerExtractorAPI(Akamaicdn())
         registerExtractorAPI(Luluvdo())
