@@ -4,13 +4,11 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.plugins.BasePlugin
 import com.lagradost.cloudstream3.plugins.CloudstreamPlugin
-import com.lagradost.cloudstream3.utils.AppUtils.parsedSafe
 
 @CloudstreamPlugin
 class HDMovie2Plugin : BasePlugin() {
     override fun load() {
         registerMainAPI(HDMovie2Provider())
-        
         registerExtractorAPI(FMHD())
         registerExtractorAPI(Akamaicdn())
         registerExtractorAPI(Luluvdo())
@@ -35,11 +33,11 @@ class HDMovie2Plugin : BasePlugin() {
             if (cachedDomains != null && !forceRefresh) return cachedDomains
 
             return try {
-                app.get(DOMAINS_URL).parsedSafe<Domains>().also {
+                // parsedSafe ki jagah standard parsed() use kiya hai
+                app.get(DOMAINS_URL).parsed<Domains>().also {
                     cachedDomains = it
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
                 null
             }
         }
