@@ -1,5 +1,5 @@
 // use an integer for version numbers
-version = 155
+version = 156
 
 
 cloudstream {
@@ -22,7 +22,7 @@ cloudstream {
         "Movie",
     )
 
-    iconUrl = "https://raw.githubusercontent.com/MrXtron/CSF/refs/heads/main/Icons/Movierulzhd.png"
+    iconUrl = "https://raw.githubusercontent.com/MrXtron/CSF/refs/heads/main/Icons/HDMovie2.png"
 
     isCrossPlatform = true
 }
