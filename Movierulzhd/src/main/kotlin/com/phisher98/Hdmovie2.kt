@@ -26,19 +26,24 @@ import java.util.Calendar
 open class Hdmovie2 : Movierulzhd() {
 
     override var mainUrl: String = runBlocking {
-        MovierulzhdPlugin.getDomains()?.hdmovie2 ?: "https://hdmovie2.restaurant"
+        MovierulzhdPlugin.getDomains()?.hdmovie2 ?: "https://hdmovie2.equipment"
     }
     override var name = "Hdmovie2"
     override val mainPage = mainPageOf(
         "release/${Calendar.getInstance().get(Calendar.YEAR)}" to "Latest",
-        "genre/bollywood" to "BollyWood",
-        "movies" to "Movies",
-        "genre/hindi-webseries" to "Hindi Web Series",
-        "genre/netflix" to "Netflix",
-        "genre/zee5" to "Zee5",
         "genre/hindi-dubbed" to "Hindi Dubbed",
+        "genre/bollywood" to "BollyWood",
+        "genre/hindi-webseries" to "Hindi Web Series",
+        "genre/Action" to "Action",
+        "genre/adventure" to "Adventure",
         "genre/comedy" to "Comedy",
-        "genre/science-fiction" to "Science Fiction"
+        "genre/crime" to "Crime",
+        "genre/drama" to "Drama",
+        "genre/family" to "Family",
+        "genre/horror" to "Horror",
+        "genre/science-fiction" to "Science Fiction",
+        "genre/thriller" to "Thriller",
+        "genre/unofficial-hindi-dubbed" to "Unofficial Hindi Dubbed"
     )
 
     override suspend fun loadLinks(
