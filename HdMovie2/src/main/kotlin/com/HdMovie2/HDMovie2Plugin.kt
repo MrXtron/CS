@@ -2,15 +2,16 @@ package com.hdmovie2
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.lagradost.cloudstream3.app
-import com.lagradost.cloudstream3.extractors.VidStack
 import com.lagradost.cloudstream3.plugins.BasePlugin
 import com.lagradost.cloudstream3.plugins.CloudstreamPlugin
+import com.lagradost.cloudstream3.utils.AppUtils.parsedSafe // Ensure this is imported
 
 @CloudstreamPlugin
-class HDMovie2Plugin: BasePlugin() {
+class HDMovie2Plugin : BasePlugin() {
     override fun load() {
-        // All providers should be added in this manner. Please don't edit the providers list directly.
         registerMainAPI(HDMovie2())
+        
+        // Register custom extractors
         registerExtractorAPI(FMHD())
         registerExtractorAPI(Akamaicdn())
         registerExtractorAPI(Luluvdo())
@@ -20,25 +21,30 @@ class HDMovie2Plugin: BasePlugin() {
         registerExtractorAPI(GDFlix())
         registerExtractorAPI(Movierulzups())
         registerExtractorAPI(Movierulz())
-        registerExtractorAPI(VidStack())
+        // registerExtractorAPI(VidStack()) // Recommended: Remove if using the app's built-in version
         registerExtractorAPI(HDm2())
         registerExtractorAPI(cherryMovierulzups())
     }
+
     companion object {
         private const val DOMAINS_URL =
             "https://raw.githubusercontent.com/MrXtron/CSF/refs/heads/main/domains.json"
+        
+        @Volatile
         var cachedDomains: Domains? = null
 
         suspend fun getDomains(forceRefresh: Boolean = false): Domains? {
-            if (cachedDomains == null || forceRefresh) {
-                try {
-                    cachedDomains = app.get(DOMAINS_URL).parsedSafe<Domains>()
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    return null
+            if (cachedDomains != null && !forceRefresh) return cachedDomains
+
+            return try {
+                // Fetch and cache the result
+                app.get(DOMAINS_URL).parsedSafe<Domains>().also {
+                    cachedDomains = it
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
             }
-            return cachedDomains
         }
 
         data class Domains(
