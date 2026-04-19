@@ -1,5 +1,3 @@
-// https://github.com/hexated/cloudstream-extensions-hexated/blob/master/YomoviesProvider/src/main/kotlin/com/hexated/YomoviesProvider.kt
-
 package com.PRMovies
 
 import com.lagradost.cloudstream3.*
