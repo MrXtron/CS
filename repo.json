@@ -1,0 +1,12 @@
+{
+    "name": "MrXtron🗿",
+    "iconUrl": "https://raw.githubusercontent.com/MrXtron/CSF/refs/heads/main/Icons/RepoIcon.png",
+    "description": "Hindi Plugins from various Repos",
+    "manifestVersion": 1,
+    "pluginLists": [
+      "https://raw.githubusercontent.com/MrXtron/CS/refs/heads/builds/plugins.json",
+      "https://raw.githubusercontent.com/MrXtron/CS/refs/heads//main/PluginsPhisherRepo.json",
+      "https://raw.githubusercontent.com/MrXtron/CS/refs/heads/main/PluginsCNCVerse.json",
+      "https://raw.githubusercontent.com/MrXtron/CS/refs/heads/main/PluginNetMirror.json"
+    ]
+}
