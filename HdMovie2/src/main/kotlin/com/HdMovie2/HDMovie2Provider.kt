@@ -10,7 +10,7 @@ import kotlinx.coroutines.runBlocking
 import org.jsoup.Jsoup
 import java.util.Calendar
 
-open class HDMovie2Provider : MainAPI() {
+class HDMovie2Provider : MainAPI() {
 
     override var mainUrl: String = runBlocking {
         HDMovie2Plugin.getDomains()?.hdmovie2 ?: "https://hdmovie2.equipment"
