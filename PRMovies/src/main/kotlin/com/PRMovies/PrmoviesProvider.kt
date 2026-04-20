@@ -1,24 +1,15 @@
 package com.PRMovies
 
+import kotlinx.coroutines.runBlocking
 import com.lagradost.cloudstream3.*
+import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
 import com.lagradost.cloudstream3.mvvm.safeApiCall
-import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.loadExtractor
-import com.lagradost.cloudstream3.utils.AppUtils.amap
 import org.jsoup.nodes.Element
-import kotlinx.coroutines.runBlocking
 
 class PrmoviesProvider : MainAPI() {
-    override var mainUrl: String = runBlocking {
-        try {
-            PrmoviesPlugin.getDomains()?.PRMovies ?: "https://prmovies.giving"
-        } catch (e: Exception) {
-            "https://prmovies.giving"
-        }
-    }
-
+    override var mainUrl = "https://prmovies.giving"
     override var name = "Prmovies"
     override val hasMainPage = true
     override var lang = "hi"
@@ -55,9 +46,6 @@ class PrmoviesProvider : MainAPI() {
         val poster = fixUrlNull(document.selectFirst("div.thumb.mvic-thumb img")?.attr("src"))
         val tvType = if ((document.selectFirst("div.les-content")?.select("a")?.size ?: 0) > 1) TvType.TvSeries else TvType.Movie
         
-        // Rating fix
-        val ratingText = document.select("div.mvici-right > div.imdb_r span").text()
-
         val episodes = document.select("div.les-content a").map {
             newEpisode(it.attr("href")) {
                 this.name = it.text().replace("Server Ep", "Episode").trim()
@@ -67,19 +55,22 @@ class PrmoviesProvider : MainAPI() {
         return if (tvType == TvType.TvSeries) {
             newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
                 this.posterUrl = poster
-                this.score = LoadResponse.parseScore(ratingText)
             }
         } else {
             newMovieLoadResponse(title, url, TvType.Movie, url) {
                 this.posterUrl = poster
-                this.score = LoadResponse.parseScore(ratingText)
             }
         }
     }
 
-    override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
+    override suspend fun loadLinks(
+        data: String,
+        isCasting: Boolean,
+        subtitleCallback: (SubtitleFile) -> Unit,
+        callback: (ExtractorLink) -> Unit
+    ): Boolean {
         if (data.startsWith(mainUrl)) {
-            app.get(data).document.select("div.movieplay iframe").map { fixUrl(it.attr("src")) }.amap { source ->
+            app.get(data).document.select("div.movieplay iframe").map { fixUrl(it.attr("src")) }.forEach { source ->
                 safeApiCall { loadExtractor(source, "$mainUrl/", subtitleCallback, callback) }
             }
         } else {
