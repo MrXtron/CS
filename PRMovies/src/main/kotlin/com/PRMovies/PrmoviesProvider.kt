@@ -9,7 +9,7 @@ import com.lagradost.cloudstream3.mvvm.safeApiCall
 import org.jsoup.nodes.Element
 
 class PrmoviesProvider : MainAPI() {
-    override var mainUrl = "https://prmovies.giving"
+    override var mainUrl = "https://hhdmovies.makeup"
     override var name = "Prmovies"
     override val hasMainPage = true
     override var lang = "hi"
