@@ -11,11 +11,25 @@ import org.jsoup.Jsoup
 import java.util.Calendar
 
 class HDMovie2Provider : MainAPI() {
-
-    override var mainUrl: String = runBlocking {
-        HDMovie2Plugin.getDomains()?.hdmovie2 ?: "https://hdmovie2.equipment"
-    }
+    override var mainUrl: String = "https://hdmovie2.equipment"
     override var name = "Hdmovie2"
+    override val lang = "hi"
+    override val hasMainPage = true
+    
+    override val supportedTypes = setOf(
+        TvType.Movie,
+        TvType.TvSeries,
+        TvType.AsianDrama
+    )
+
+    init {
+        runBlocking {
+            HDMovie2Plugin.getDomains()?.hdmovie2?.let {
+                mainUrl = it
+            }
+        }
+    }
+
     override val mainPage = mainPageOf(
         "release/${Calendar.getInstance().get(Calendar.YEAR)}" to "Latest",
         "genre/hindi-dubbed" to "Hindi Dubbed",
@@ -67,7 +81,6 @@ class HDMovie2Provider : MainAPI() {
                 loadData.nume.orEmpty(),
                 loadData.type.orEmpty()
             )
-
             if (!source.contains("youtube")) {
                 loadExtractor(source, "$mainUrl/", subtitleCallback, callback)
             }
@@ -110,7 +123,6 @@ class HDMovie2Provider : MainAPI() {
                 }
             }
         }
-
         return true
     }
 
