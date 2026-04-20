@@ -13,7 +13,7 @@ import java.util.Calendar
 class HDMovie2Provider : MainAPI() {
     override var mainUrl: String = "https://hdmovie2.equipment"
     override var name = "Hdmovie2"
-    override val lang = "hi"
+    override var lang = "hi"
     override val hasMainPage = true
     
     override val supportedTypes = setOf(
