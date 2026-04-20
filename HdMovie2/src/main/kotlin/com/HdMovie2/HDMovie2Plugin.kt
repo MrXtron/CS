@@ -23,17 +23,14 @@ class HDMovie2Plugin : BasePlugin() {
     }
 
     companion object {
-        private const val DOMAINS_URL =
-            "https://raw.githubusercontent.com/MrXtron/CSF/refs/heads/main/domains.json"
+        private const val DOMAINS_URL = "https://raw.githubusercontent.com/MrXtron/CSF/refs/heads/main/domains.json"
         
         @Volatile
         var cachedDomains: Domains? = null
 
         suspend fun getDomains(forceRefresh: Boolean = false): Domains? {
             if (cachedDomains != null && !forceRefresh) return cachedDomains
-
             return try {
-                // parsedSafe ki jagah standard parsed() use kiya hai
                 app.get(DOMAINS_URL).parsed<Domains>().also {
                     cachedDomains = it
                 }
