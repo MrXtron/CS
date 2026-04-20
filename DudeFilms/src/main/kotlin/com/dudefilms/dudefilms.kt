@@ -50,12 +50,12 @@ class Dudefilms : MainAPI() {
     }
 
     override val mainPage = mainPageOf(
-        "category/bollywood" to "Bollywood",
-        "category/hollywood" to "Hollywood",
-        "category/southindian" to "South Indian",
-        "category/webseries" to "Web Series",
-        "category/dual-audio" to "Dual Audio",
-        "category/fan-dubbed" to "Fan Dubbed",
+        "category/bollywood/" to "Bollywood",
+        "category/hollywood/" to "Hollywood",
+        "category/southindian/" to "South Indian",
+        "category/webseries/" to "Web Series",
+        "category/dual-audio/" to "Dual Audio",
+        "category/fan-dubbed/" to "Fan Dubbed",
         "category/adult/" to "Adult",
     )
 

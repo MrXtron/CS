@@ -18,6 +18,10 @@ class PrmoviesProvider : MainAPI() {
 
     override val mainPage = mainPageOf(
         "$mainUrl/most-favorites/page/" to "Most Viewed",
+        "$mainUrl/genre/bollywood/page/" to "Bollywood",
+        "$mainUrl/genre/dual-audio/page/" to "Dual Audio",
+        "$mainUrl/genre/south-special/page/" to "South Movies",
+        "$mainUrl/genre/unofficial-dubbed/page/" to "Unofficial Dubbed",
         "$mainUrl/director/netflix/page/" to "Netflix",
         "$mainUrl/director/amazon-prime/page/" to "Amazon Prime"
     )
