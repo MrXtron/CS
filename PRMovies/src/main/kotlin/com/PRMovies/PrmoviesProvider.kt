@@ -1,16 +1,22 @@
 package com.PRMovies
 
+import kotlinx.coroutines.runBlocking
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
 import com.lagradost.cloudstream3.mvvm.safeApiCall
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
+import com.lagradost.cloudstream3.utils.amap
 import org.jsoup.nodes.Element
 
 class PrmoviesProvider : MainAPI() {
     override var mainUrl: String = runBlocking {
-        PrmoviesPlugin.getDomains()?.PRMovies ?: "https://prmovies.giving"
+        try {
+            PrmoviesPlugin.getDomains()?.PRMovies ?: "https://prmovies.giving"
+        } catch (e: Exception) {
+            "https://prmovies.giving"
+        }
     }
 
     override var name = "Prmovies"
@@ -76,13 +82,13 @@ class PrmoviesProvider : MainAPI() {
         val tags = document.select("div.mvici-left p:nth-child(1) a").map { it.text() }
         val year = document.select("div.mvici-right p:nth-child(3) a").text().trim()
             .toIntOrNull()
-        val tvType = if (document.selectFirst("div.les-content")
-                ?.select("a")?.size!! > 1 || document.selectFirst("ul.idTabs li strong")?.text()
+        val tvType = if ((document.selectFirst("div.les-content")
+                ?.select("a")?.size ?: 0) > 1 || document.selectFirst("ul.idTabs li strong")?.text()
                 ?.contains(Regex("(?i)(EP\\s?[0-9]+)|(episode\\s?[0-9]+)")) == true
         ) TvType.TvSeries else TvType.Movie
         val description = document.selectFirst("p.f-desc")?.text()?.trim()
         val trailer = fixUrlNull(document.select("iframe#iframe-trailer").attr("src"))
-        val rating = document.select("div.mvici-right > div.imdb_r span").text().toRatingInt()
+        val rating = document.select("div.mvici-right > div.imdb_r span").text().toRating()
         val actors = document.select("div.mvici-left p:nth-child(3) a").map { it.text() }
         val recommendations = document.select("div.ml-item").mapNotNull {
             it.toSearchResult()
@@ -94,17 +100,15 @@ class PrmoviesProvider : MainAPI() {
             ) {
                 document.select("ul.idTabs li").map {
                     val id = it.select("a").attr("href")
-                    Episode(
-                        data = fixUrl(document.select("div$id iframe").attr("src")),
-                        name = it.select("strong").text().replace("Server Ep", "Episode")
-                    )
+                    newEpisode(fixUrl(document.select("div$id iframe").attr("src"))) {
+                        this.name = it.select("strong").text().replace("Server Ep", "Episode")
+                    }
                 }
             } else {
                 document.select("div.les-content a").map {
-                    Episode(
-                        data = it.attr("href"),
-                        name = it.text().replace("Server Ep", "Episode").trim(),
-                    )
+                    newEpisode(it.attr("href")) {
+                        this.name = it.text().replace("Server Ep", "Episode").trim()
+                    }
                 }
             }
 
@@ -113,7 +117,7 @@ class PrmoviesProvider : MainAPI() {
                 this.year = year
                 this.plot = description
                 this.tags = tags
-                this.rating = rating
+                this.score = rating
                 addActors(actors)
                 this.recommendations = recommendations
                 addTrailer(trailer)
@@ -124,7 +128,7 @@ class PrmoviesProvider : MainAPI() {
                 this.year = year
                 this.plot = description
                 this.tags = tags
-                this.rating = rating
+                this.score = rating
                 addActors(actors)
                 this.recommendations = recommendations
                 addTrailer(trailer)
@@ -141,14 +145,14 @@ class PrmoviesProvider : MainAPI() {
 
         if (data.startsWith(mainUrl)) {
             app.get(data).document.select("div.movieplay iframe").map { fixUrl(it.attr("src")) }
-                .apmap { source ->
+                .amap { source ->
                     safeApiCall {
                         when {
                             source.startsWith("https://membed.net") -> app.get(
                                 source,
                                 referer = "$mainUrl/"
                             ).document.select("ul.list-server-items li")
-                                .apmap {
+                                .amap {
                                     loadExtractor(
                                         it.attr("data-video").substringBefore("=https://msubload"),
                                         "$mainUrl/",
@@ -166,6 +170,4 @@ class PrmoviesProvider : MainAPI() {
 
         return true
     }
-
-
 }
