@@ -13,6 +13,11 @@ class PrmoviesProvider : MainAPI() {
     override val hasDownloadSupport = true
     override val supportedTypes = setOf(TvType.Movie, TvType.TvSeries)
 
+    private val commonHeaders = mapOf(
+        "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Referer" to "$mainUrl/"
+    )
+
     override val mainPage = mainPageOf(
         "$mainUrl/most-favorites/page/" to "Most Viewed",
         "$mainUrl/genre/bollywood/page/" to "Bollywood",
@@ -25,7 +30,7 @@ class PrmoviesProvider : MainAPI() {
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val url = if (page == 1) request.data.removeSuffix("page/") else "${request.data}$page"
-        val document = app.get(url).document
+        val document = app.get(url, headers = commonHeaders).document
         val home = document.select("div.ml-item, div.item, article").mapNotNull { it.toSearchResult() }
         return newHomePageResponse(request.name, home)
     }
@@ -42,12 +47,12 @@ class PrmoviesProvider : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val document = app.get("$mainUrl/?s=$query").document
+        val document = app.get("$mainUrl/?s=$query", headers = commonHeaders).document
         return document.select("div.ml-item, div.item, article").mapNotNull { it.toSearchResult() }
     }
 
     override suspend fun load(url: String): LoadResponse? {
-        val document = app.get(url).document
+        val document = app.get(url, headers = commonHeaders).document
         val title = document.selectFirst("h1, h2, .mvic-desc h3")?.text()?.trim() ?: return null
         val poster = fixUrlNull(document.selectFirst(".poster img, .thumb img, .mvic-thumb img")?.attr("src"))
         
@@ -76,16 +81,12 @@ class PrmoviesProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        if (data.startsWith(mainUrl)) {
-            val document = app.get(data).document
-            document.select("iframe, .movieplay iframe").forEach { 
-                val source = fixUrl(it.attr("src"))
-                if (source.isNotEmpty() && !source.contains("youtube")) {
-                    safeApiCall { loadExtractor(source, "$mainUrl/", subtitleCallback, callback) }
-                }
+        val document = app.get(data, headers = commonHeaders).document
+        document.select("iframe, .movieplay iframe").forEach { 
+            val source = fixUrl(it.attr("src"))
+            if (source.isNotEmpty() && !source.contains("youtube")) {
+                safeApiCall { loadExtractor(source, data, subtitleCallback, callback) }
             }
-        } else {
-            loadExtractor(data, "$mainUrl/", subtitleCallback, callback)
         }
         return true
     }
