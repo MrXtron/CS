@@ -34,7 +34,7 @@ import org.jsoup.nodes.Element
 
 class Dudefilms : MainAPI() {
     override var mainUrl: String = runBlocking {
-        DudefilmsPlugin.getDomains()?.dudefilms ?: "https://dudefilms.llc"
+        DudefilmsPlugin.getDomains()?.dudefilms ?: "https://new1.dudefilms.plus"
     }
     override var name = "Dudefilms"
     override var lang = "hi"
