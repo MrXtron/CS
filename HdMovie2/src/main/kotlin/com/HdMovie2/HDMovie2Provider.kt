@@ -19,13 +19,10 @@ class HDMovie2Provider : MainAPI() {
     )
 
     override val mainPage = mainPageOf(
-        "release/${Calendar.getInstance().get(Calendar.YEAR)}" to "Latest",
+        "release/2024" to "Latest",
         "genre/hindi-dubbed" to "Hindi Dubbed",
         "genre/bollywood" to "BollyWood",
-        "genre/hindi-webseries" to "Hindi Web Series",
-        "genre/Action" to "Action",
-        "genre/comedy" to "Comedy",
-        "genre/drama" to "Drama"
+        "genre/hindi-webseries" to "Hindi Web Series"
     )
 
     private suspend fun fixUrl() {
@@ -36,7 +33,8 @@ class HDMovie2Provider : MainAPI() {
         } catch (e: Exception) { }
     }
 
-    override suspend fun getMainPage(page: Int, request: HomePageRequest): HomePageResponse {
+    // FIX 1: MainPageRequest use kiya aur nullability handle ki
+    override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         fixUrl()
         val url = if (page <= 1) "$mainUrl/${request.data}/" else "$mainUrl/${request.data}/page/$page/"
         val document = app.get(url).document
@@ -70,7 +68,6 @@ class HDMovie2Provider : MainAPI() {
         val title = document.selectFirst("div.data > h1")?.text() ?: return null
         val poster = document.selectFirst("div.poster > img")?.attr("src")
         val plot = document.selectFirst("div.wp-content > p")?.text()
-        
         val isTv = url.contains("/tvshows/") || document.selectFirst("ul.episodios") != null
 
         return if (isTv) {
@@ -80,7 +77,12 @@ class HDMovie2Provider : MainAPI() {
                 val num = it.selectFirst("div.numerando")?.text()?.split("-")
                 val s = num?.firstOrNull()?.replace(Regex("[^0-9]"), "")?.toIntOrNull()
                 val e = num?.lastOrNull()?.replace(Regex("[^0-9]"), "")?.toIntOrNull()
-                Episode(href, name, s, e)
+                // FIX 2: newEpisode use kiya constructor ki jagah
+                newEpisode(href) {
+                    this.name = name
+                    this.season = s
+                    this.episode = e
+                }
             }
             newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
                 this.posterUrl = poster
@@ -108,18 +110,12 @@ class HDMovie2Provider : MainAPI() {
             val nume = li.attr("data-nume")
             val response = app.post(
                 url = "$mainUrl/wp-admin/admin-ajax.php",
-                data = mapOf(
-                    "action" to "doo_player_ajax",
-                    "post" to id,
-                    "nume" to nume,
-                    "type" to type
-                ),
+                data = mapOf("action" to "doo_player_ajax", "post" to id, "nume" to nume, "type" to type),
                 headers = mapOf("X-Requested-With" to "XMLHttpRequest")
             ).text
             
             val embedUrl = AppUtils.tryParseJson<ResponseHash>(response)?.embed_url
             val source = embedUrl?.let { Jsoup.parse(it).select("iframe").attr("src") }
-            
             if (!source.isNullOrEmpty() && !source.contains("youtube")) {
                 loadExtractor(source, "$mainUrl/", subtitleCallback, callback)
             }
@@ -127,7 +123,5 @@ class HDMovie2Provider : MainAPI() {
         return true
     }
 
-    data class ResponseHash(
-        @JsonProperty("embed_url") val embed_url: String? = null
-    )
+    data class ResponseHash(@JsonProperty("embed_url") val embed_url: String? = null)
 }
