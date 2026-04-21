@@ -28,7 +28,7 @@ class HDMovie2Provider : MainAPI() {
         "genre/drama" to "Drama"
     )
 
-    private suspend fun updateDomain() {
+    private suspend fun fixUrl() {
         try {
             HDMovie2Plugin.getDomains()?.hdmovie2?.let {
                 mainUrl = it
@@ -37,7 +37,7 @@ class HDMovie2Provider : MainAPI() {
     }
 
     override suspend fun getMainPage(page: Int, request: HomePageRequest): HomePageResponse {
-        updateDomain()
+        fixUrl()
         val url = if (page <= 1) "$mainUrl/${request.data}/" else "$mainUrl/${request.data}/page/$page/"
         val document = app.get(url).document
         val items = document.select("div.items > article, div.result-item").mapNotNull {
@@ -52,7 +52,7 @@ class HDMovie2Provider : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        updateDomain()
+        fixUrl()
         val document = app.get("$mainUrl/?s=$query").document
         return document.select("div.result-item").mapNotNull {
             val title = it.selectFirst("div.title > a")?.text() ?: return@mapNotNull null
@@ -65,11 +65,12 @@ class HDMovie2Provider : MainAPI() {
     }
 
     override suspend fun load(url: String): LoadResponse? {
-        updateDomain()
+        fixUrl()
         val document = app.get(url).document
         val title = document.selectFirst("div.data > h1")?.text() ?: return null
         val poster = document.selectFirst("div.poster > img")?.attr("src")
         val plot = document.selectFirst("div.wp-content > p")?.text()
+        
         val isTv = url.contains("/tvshows/") || document.selectFirst("ul.episodios") != null
 
         return if (isTv) {
@@ -81,7 +82,7 @@ class HDMovie2Provider : MainAPI() {
                 val e = num?.lastOrNull()?.replace(Regex("[^0-9]"), "")?.toIntOrNull()
                 Episode(href, name, s, e)
             }
-            newTvSeriesLoadResponse(title, url, TvType.Movie, episodes) {
+            newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
                 this.posterUrl = poster
                 this.plot = plot
             }
@@ -107,7 +108,12 @@ class HDMovie2Provider : MainAPI() {
             val nume = li.attr("data-nume")
             val response = app.post(
                 url = "$mainUrl/wp-admin/admin-ajax.php",
-                data = mapOf("action" to "doo_player_ajax", "post" to id, "nume" to nume, "type" to type),
+                data = mapOf(
+                    "action" to "doo_player_ajax",
+                    "post" to id,
+                    "nume" to nume,
+                    "type" to type
+                ),
                 headers = mapOf("X-Requested-With" to "XMLHttpRequest")
             ).text
             
