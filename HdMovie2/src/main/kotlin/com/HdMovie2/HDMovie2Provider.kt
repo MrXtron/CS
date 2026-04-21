@@ -28,10 +28,16 @@ class HDMovie2Provider : MainAPI() {
         "genre/drama" to "Drama"
     )
 
-    override suspend fun getMainPage(page: Int, request: HomePageRequest): HomePageResponse {
-        val domain = HDMovie2Plugin.getDomains()?.hdmovie2
-        if (!domain.isNullOrEmpty()) mainUrl = domain
+    private suspend fun updateDomain() {
+        try {
+            HDMovie2Plugin.getDomains()?.hdmovie2?.let {
+                mainUrl = it
+            }
+        } catch (e: Exception) { }
+    }
 
+    override suspend fun getMainPage(page: Int, request: HomePageRequest): HomePageResponse {
+        updateDomain()
         val url = if (page <= 1) "$mainUrl/${request.data}/" else "$mainUrl/${request.data}/page/$page/"
         val document = app.get(url).document
         val items = document.select("div.items > article, div.result-item").mapNotNull {
@@ -46,9 +52,7 @@ class HDMovie2Provider : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val domain = HDMovie2Plugin.getDomains()?.hdmovie2
-        if (!domain.isNullOrEmpty()) mainUrl = domain
-
+        updateDomain()
         val document = app.get("$mainUrl/?s=$query").document
         return document.select("div.result-item").mapNotNull {
             val title = it.selectFirst("div.title > a")?.text() ?: return@mapNotNull null
@@ -61,6 +65,7 @@ class HDMovie2Provider : MainAPI() {
     }
 
     override suspend fun load(url: String): LoadResponse? {
+        updateDomain()
         val document = app.get(url).document
         val title = document.selectFirst("div.data > h1")?.text() ?: return null
         val poster = document.selectFirst("div.poster > img")?.attr("src")
@@ -76,7 +81,7 @@ class HDMovie2Provider : MainAPI() {
                 val e = num?.lastOrNull()?.replace(Regex("[^0-9]"), "")?.toIntOrNull()
                 Episode(href, name, s, e)
             }
-            newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
+            newTvSeriesLoadResponse(title, url, TvType.Movie, episodes) {
                 this.posterUrl = poster
                 this.plot = plot
             }
