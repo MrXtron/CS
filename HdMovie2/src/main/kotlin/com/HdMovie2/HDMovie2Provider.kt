@@ -1,13 +1,8 @@
 package com.hdmovie2
 
 import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
-import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.loadExtractor
-import com.lagradost.cloudstream3.utils.SubtitleFile
 import com.lagradost.cloudstream3.utils.*
 import com.fasterxml.jackson.annotation.JsonProperty
-import kotlinx.coroutines.runBlocking
 import org.jsoup.Jsoup
 import java.util.Calendar
 
@@ -23,14 +18,6 @@ class HDMovie2Provider : MainAPI() {
         TvType.AsianDrama
     )
 
-    init {
-        runBlocking {
-            HDMovie2Plugin.getDomains()?.hdmovie2?.let {
-                mainUrl = it
-            }
-        }
-    }
-
     override val mainPage = mainPageOf(
         "release/${Calendar.getInstance().get(Calendar.YEAR)}" to "Latest",
         "genre/hindi-dubbed" to "Hindi Dubbed",
@@ -41,7 +28,16 @@ class HDMovie2Provider : MainAPI() {
         "genre/drama" to "Drama"
     )
 
+    private suspend fun updateDomain() {
+        try {
+            HDMovie2Plugin.getDomains()?.hdmovie2?.let {
+                mainUrl = it
+            }
+        } catch (e: Exception) { }
+    }
+
     override suspend fun getMainPage(page: Int, request: HomePageRequest): HomePageResponse {
+        updateDomain()
         val url = if (page <= 1) "$mainUrl/${request.data}/" else "$mainUrl/${request.data}/page/$page/"
         val document = app.get(url).document
         val items = document.select("div.items > article, div.result-item").mapNotNull {
@@ -56,6 +52,7 @@ class HDMovie2Provider : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
+        updateDomain()
         val document = app.get("$mainUrl/?s=$query").document
         return document.select("div.result-item").mapNotNull {
             val title = it.selectFirst("div.title > a")?.text() ?: return@mapNotNull null
@@ -68,6 +65,7 @@ class HDMovie2Provider : MainAPI() {
     }
 
     override suspend fun load(url: String): LoadResponse? {
+        updateDomain()
         val document = app.get(url).document
         val title = document.selectFirst("div.data > h1")?.text() ?: return null
         val poster = document.selectFirst("div.poster > img")?.attr("src")
@@ -79,8 +77,8 @@ class HDMovie2Provider : MainAPI() {
                 val href = it.selectFirst("a")?.attr("href") ?: ""
                 val name = it.selectFirst("div.episodiotitle > a")?.text() ?: ""
                 val num = it.selectFirst("div.numerando")?.text()?.split("-")
-                val s = num?.firstOrNull()?.trim()?.toIntOrNull()
-                val e = num?.lastOrNull()?.trim()?.toIntOrNull()
+                val s = num?.firstOrNull()?.replace(Regex("[^0-9]"), "")?.toIntOrNull()
+                val e = num?.lastOrNull()?.replace(Regex("[^0-9]"), "")?.toIntOrNull()
                 Episode(href, name, s, e)
             }
             newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
@@ -111,9 +109,11 @@ class HDMovie2Provider : MainAPI() {
                 url = "$mainUrl/wp-admin/admin-ajax.php",
                 data = mapOf("action" to "doo_player_ajax", "post" to id, "nume" to nume, "type" to type),
                 headers = mapOf("X-Requested-With" to "XMLHttpRequest")
-            ).parsedSafe<ResponseHash>()
+            ).text
             
-            val source = response?.embed_url?.let { Jsoup.parse(it).select("iframe").attr("src") }
+            val embedUrl = AppUtils.tryParseJson<ResponseHash>(response)?.embed_url
+            val source = embedUrl?.let { Jsoup.parse(it).select("iframe").attr("src") }
+            
             if (!source.isNullOrEmpty() && !source.contains("youtube")) {
                 loadExtractor(source, "$mainUrl/", subtitleCallback, callback)
             }
