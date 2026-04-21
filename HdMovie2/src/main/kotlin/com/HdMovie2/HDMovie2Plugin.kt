@@ -31,17 +31,18 @@ class HDMovie2Plugin : BasePlugin() {
         suspend fun getDomains(forceRefresh: Boolean = false): Domains? {
             if (cachedDomains != null && !forceRefresh) return cachedDomains
             return try {
-                app.get(DOMAINS_URL).parsed<Domains>().also {
+                // parsedSafe use karna behtar hai crash se bachne ke liye
+                app.get(DOMAINS_URL).parsedSafe<Domains>().also {
                     cachedDomains = it
                 }
             } catch (e: Exception) {
                 null
             }
         }
-
-        data class Domains(
-            @JsonProperty("hdmovie2")
-            val hdmovie2: String,
-        )
     }
 }
+
+data class Domains(
+    @JsonProperty("hdmovie2")
+    val hdmovie2: String,
+)
