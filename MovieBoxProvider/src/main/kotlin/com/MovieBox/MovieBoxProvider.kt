@@ -191,30 +191,26 @@ class MovieBoxProvider : MainAPI() {
         
         if (request.data == "dynamic_genre") {
             val genreRows = mutableListOf<HomePageList>()
-            // In 5 genres ko test karte haien
-            val itemsToLoad = listOf("Action", "Comedy", "Adventure", "Horror", "Sci-Fi")
+            val itemsToLoad = listOf("Action", "Adventure", "Animation", "Comedy", "Crime", "Drama", "Horror", "Sci-Fi")
             
             for (genreName in itemsToLoad) {
-                // MovieBox API format: channelId "1" movies ke liye hota hai
-                // Classify aur Country ko "All" rakha hai taaki zyada results milein
-                val bodyJson = """{"page":1,"perPage":10,"channelId":"1","classify":"All","country":"All","year":"All","genre":"$genreName","sort":"ForYou"}"""
+                // Exact URL Format jo aapne manga tha
+                val bodyData = "1|1;classify=Hindi dub;genre=$genreName"
                 val url = "$mainUrl/wefeed-mobile-bff/subject-api/list"
                 
-                val signature = generateXTrSignature("POST", "application/json", "application/json; charset=utf-8", url, bodyJson)
+                val signature = generateXTrSignature("POST", "application/json", "application/json; charset=utf-8", url, bodyData)
                 
                 val responseText = try {
                     app.post(url, headers = mapOf(
                         "x-client-token" to generateXClientToken(),
                         "x-tr-signature" to signature,
                         "content-type" to "application/json",
-                        "accept" to "application/json",
-                        "user-agent" to "com.community.mbox.in/50020042 (Android 16)"
-                    ), requestBody = bodyJson.toRequestBody("application/json".toMediaType())).text
+                        "accept" to "application/json"
+                    ), data = bodyData).text // Directly sending string data
                 } catch (e: Exception) { null }
 
                 val items = try {
                     val root = jacksonObjectMapper().readTree(responseText ?: "")
-                    // MovieBox API "data" -> "items" ya "data" -> "subjects" dono use karti hai
                     val nodes = root["data"]?.get("items") ?: root["data"]?.get("subjects")
                     nodes?.mapNotNull { item ->
                         newMovieSearchResponse(
