@@ -31,15 +31,20 @@ class PrmoviesProvider : MainAPI() {
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val url = if (page == 1) request.data.removeSuffix("page/") else "${request.data}$page"
         val document = app.get(url, headers = commonHeaders).document
-        val home = document.select("div.ml-item, div.item, article").mapNotNull { it.toSearchResult() }
+        val home = document.select("div.ml-item, .item, .movies-list .ml-item").mapNotNull { it.toSearchResult() }
         return newHomePageResponse(request.name, home)
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
-        val title = this.selectFirst("h2, h3, .entry-title")?.text()?.trim() ?: return null
+        val titleElement = this.selectFirst(".mli-info h2, h2, h3, a") ?: return null
+        val title = titleElement.text().trim()
         val href = fixUrl(this.selectFirst("a")?.attr("href") ?: return null)
         val img = this.selectFirst("img")
-        val posterUrl = fixUrlNull(img?.attr("data-original")?.takeIf { it.isNotEmpty() } ?: img?.attr("src"))
+        val posterUrl = fixUrlNull(
+            img?.attr("data-original") ?: 
+            img?.attr("data-src") ?: 
+            img?.attr("src")
+        )
 
         return newMovieSearchResponse(title, href, TvType.Movie) { 
             this.posterUrl = posterUrl 
@@ -48,7 +53,7 @@ class PrmoviesProvider : MainAPI() {
 
     override suspend fun search(query: String): List<SearchResponse> {
         val document = app.get("$mainUrl/?s=$query", headers = commonHeaders).document
-        return document.select("div.ml-item, div.item, article").mapNotNull { it.toSearchResult() }
+        return document.select("div.ml-item, .item, .movies-list .ml-item").mapNotNull { it.toSearchResult() }
     }
 
     override suspend fun load(url: String): LoadResponse? {
