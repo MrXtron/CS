@@ -188,6 +188,7 @@ class MovieBoxProvider : MainAPI() {
         "1|2;country=India" to "Indian (Series)",
         "dynamic_genre" to "Browse by Genre"
     )
+    
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val perPage = 15
         
@@ -196,9 +197,9 @@ class MovieBoxProvider : MainAPI() {
             val itemsToLoad = listOf("Action", "Comedy", "Crime", "Horror", "Sci-Fi", "Romance", "Thriller", "Adventure")
             
             for (genreName in itemsToLoad) {
-                val body = """{"page":1,"perPage":10,"channelId":"1","classify":"Hindi dub","country":"All","year":"All","genre":"$genreName","sort":"ForYou"}"""
+                val bodyJson = """{"page":1,"perPage":10,"channelId":"1","classify":"Hindi dub","country":"All","year":"All","genre":"$genreName","sort":"ForYou"}"""
                 val url = "$mainUrl/wefeed-mobile-bff/subject-api/list"
-                val signature = generateXTrSignature("POST", "application/json", "application/json; charset=utf-8", url, body)
+                val signature = generateXTrSignature("POST", "application/json", "application/json; charset=utf-8", url, bodyJson)
                 
                 val res = try {
                     app.post(url, headers = mapOf(
@@ -207,7 +208,7 @@ class MovieBoxProvider : MainAPI() {
                         "content-type" to "application/json",
                         "accept" to "application/json",
                         "user-agent" to "com.community.mbox.in/50020042 (Linux; U; Android 16; en_IN; sdk_gphone64_x86_64; Build/BP22.250325.006; Cronet/133.0.6876.3)"
-                    ), data = body).text
+                    ), requestBody = bodyJson.toRequestBody("application/json".toMediaType())).text
                 } catch (e: Exception) { null }
 
                 val items = try {
@@ -226,7 +227,7 @@ class MovieBoxProvider : MainAPI() {
                 } catch (e: Exception) { null } ?: emptyList()
 
                 if (items.isNotEmpty()) {
-                    genreRows.add(HomePageList(genreName, items, isHorizontal = true))
+                    genreRows.add(HomePageList(genreName, items))
                 }
             }
             return newHomePageResponse(genreRows, hasNext = false)
@@ -236,7 +237,7 @@ class MovieBoxProvider : MainAPI() {
         val url = if (isPost) "$mainUrl/wefeed-mobile-bff/subject-api/list" 
                   else "$mainUrl/wefeed-mobile-bff/tab/ranking-list?tabId=0&categoryType=${request.data}&page=$page&perPage=$perPage"
 
-        val body = if (isPost) {
+        val bodyJson = if (isPost) {
             val mainParts = request.data.substringBefore(";").split("|")
             val channelId = mainParts.getOrNull(1)
             val options = mutableMapOf<String, String>()
@@ -245,16 +246,16 @@ class MovieBoxProvider : MainAPI() {
                 if (p.size == 2) options[p[0]] = p[1]
             }
             """{"page":$page,"perPage":$perPage,"channelId":"$channelId","classify":"${options["classify"] ?: "All"}","country":"${options["country"] ?: "All"}","year":"${options["year"] ?: "All"}","genre":"${options["genre"] ?: "All"}","sort":"${options["sort"] ?: "ForYou"}"}"""
-        } else null
+        } else ""
 
-        val signature = generateXTrSignature(if (isPost) "POST" else "GET", "application/json", "application/json", url, body)
+        val signature = generateXTrSignature(if (isPost) "POST" else "GET", "application/json", "application/json", url, if(isPost) bodyJson else null)
         
         val response = if (isPost) {
             app.post(url, headers = mapOf(
                 "x-client-token" to generateXClientToken(),
                 "x-tr-signature" to signature,
                 "content-type" to "application/json"
-            ), data = body!!)
+            ), requestBody = bodyJson.toRequestBody("application/json".toMediaType()))
         } else {
             app.get(url, headers = mapOf(
                 "x-client-token" to generateXClientToken(),
@@ -277,7 +278,7 @@ class MovieBoxProvider : MainAPI() {
             }
         } catch (_: Exception) { emptyList() }
 
-        return newHomePageResponse(listOf(HomePageList(request.name, data)), true)
+        return newHomePageResponse(listOf(HomePageList(request.name ?: "", data)), true)
     }
 
     override suspend fun search(query: String,page: Int): SearchResponseList {
