@@ -170,10 +170,12 @@ class MovieBoxProvider : MainAPI() {
     override val mainPage = mainPageOf(
         "4516404531735022304" to "Trending",
         "5692654647815587592" to "Trending in Cinema",
+        "1|1;country=India" to "Indian (Movies)",
         "414907768299210008"  to "Bollywood",
         "3859721901924910512" to "South Indian",
         "8019599703232971616" to "Hollywood",
         "4741626294545400336" to "Top Series This Week",
+        "1|2;country=India" to "Indian (Series)",
         "8434602210994128512" to "Anime",
         "1255898847918934600" to "Reality TV",
         "4903182713986896328" to "Indian Drama",
@@ -181,38 +183,38 @@ class MovieBoxProvider : MainAPI() {
         "8788126208987989488" to "Chinese Drama",
         "3910636007619709856" to "Western TV",
         "5177200225164885656" to "Turkish Drama",
-        "1|1" to "Movies",
-        "1|2" to "Series",
-        "1|1006" to "Anime",
-        "1|1;country=India" to "Indian (Movies)",
-        "1|2;country=India" to "Indian (Series)",
         "dynamic_genre" to "Browse by Genre"
     )
-    
+
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val perPage = 15
         
         if (request.data == "dynamic_genre") {
             val genreRows = mutableListOf<HomePageList>()
-            val itemsToLoad = listOf("Action", "Comedy", "Crime", "Horror", "Sci-Fi", "Romance", "Thriller", "Adventure")
+            // In 5 genres ko test karte haien
+            val itemsToLoad = listOf("Action", "Comedy", "Adventure", "Horror", "Sci-Fi")
             
             for (genreName in itemsToLoad) {
-                val bodyJson = """{"page":1,"perPage":10,"channelId":"1","classify":"Hindi dub","country":"All","year":"All","genre":"$genreName","sort":"ForYou"}"""
+                // MovieBox API format: channelId "1" movies ke liye hota hai
+                // Classify aur Country ko "All" rakha hai taaki zyada results milein
+                val bodyJson = """{"page":1,"perPage":10,"channelId":"1","classify":"All","country":"All","year":"All","genre":"$genreName","sort":"ForYou"}"""
                 val url = "$mainUrl/wefeed-mobile-bff/subject-api/list"
+                
                 val signature = generateXTrSignature("POST", "application/json", "application/json; charset=utf-8", url, bodyJson)
                 
-                val res = try {
+                val responseText = try {
                     app.post(url, headers = mapOf(
                         "x-client-token" to generateXClientToken(),
                         "x-tr-signature" to signature,
                         "content-type" to "application/json",
                         "accept" to "application/json",
-                        "user-agent" to "com.community.mbox.in/50020042 (Linux; U; Android 16; en_IN; sdk_gphone64_x86_64; Build/BP22.250325.006; Cronet/133.0.6876.3)"
+                        "user-agent" to "com.community.mbox.in/50020042 (Android 16)"
                     ), requestBody = bodyJson.toRequestBody("application/json".toMediaType())).text
                 } catch (e: Exception) { null }
 
                 val items = try {
-                    val root = jacksonObjectMapper().readTree(res)
+                    val root = jacksonObjectMapper().readTree(responseText ?: "")
+                    // MovieBox API "data" -> "items" ya "data" -> "subjects" dono use karti hai
                     val nodes = root["data"]?.get("items") ?: root["data"]?.get("subjects")
                     nodes?.mapNotNull { item ->
                         newMovieSearchResponse(
