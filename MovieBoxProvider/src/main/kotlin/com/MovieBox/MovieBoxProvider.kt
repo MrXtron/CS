@@ -191,13 +191,12 @@ class MovieBoxProvider : MainAPI() {
         
         if (request.data == "dynamic_genre") {
             val genreRows = mutableListOf<HomePageList>()
-            val itemsToLoad = listOf("Action", "Adventure", "Animation", "Comedy", "Crime", "Drama", "Horror", "Sci-Fi")
             
-            for (genreName in itemsToLoad) {
-                // Exact URL Format jo aapne manga tha
+            for (genreName in genreList) {
+                if (genreName == "All") continue
+
                 val bodyData = "1|1;classify=Hindi dub;genre=$genreName"
                 val url = "$mainUrl/wefeed-mobile-bff/subject-api/list"
-                
                 val signature = generateXTrSignature("POST", "application/json", "application/json; charset=utf-8", url, bodyData)
                 
                 val responseText = try {
@@ -206,7 +205,7 @@ class MovieBoxProvider : MainAPI() {
                         "x-tr-signature" to signature,
                         "content-type" to "application/json",
                         "accept" to "application/json"
-                    ), data = bodyData).text // Directly sending string data
+                    ), requestBody = bodyData.toRequestBody("application/json".toMediaType())).text
                 } catch (e: Exception) { null }
 
                 val items = try {
@@ -243,7 +242,7 @@ class MovieBoxProvider : MainAPI() {
                 val p = it.split("=")
                 if (p.size == 2) options[p[0]] = p[1]
             }
-            """{"page":$page,"perPage":$perPage,"channelId":"$channelId","classify":"${options["classify"] ?: "All"}","country":"${options["country"] ?: "All"}","year":"${options["year"] ?: "All"}","genre":"${options["genre"] ?: "All"}","sort":"${options["sort"] ?: "ForYou"}"}"""
+            """{"page":$page,"perPage":$perPage,"channelId":"$channelId","classify":"${options["classify"] ?: "All"}","country":"${options["country"] ?: "All"}","year":"${options["year"] ?: "All"}","genre":"${options["genre"] ?: "All"}","sort":"ForYou"}"""
         } else ""
 
         val signature = generateXTrSignature(if (isPost) "POST" else "GET", "application/json", "application/json", url, if(isPost) bodyJson else null)
@@ -278,6 +277,7 @@ class MovieBoxProvider : MainAPI() {
 
         return newHomePageResponse(listOf(HomePageList(request.name ?: "", data)), true)
     }
+
 
     override suspend fun search(query: String,page: Int): SearchResponseList {
         val url = "$mainUrl/wefeed-mobile-bff/subject-api/search/v2"
