@@ -192,20 +192,18 @@ class MovieBoxProvider : MainAPI() {
         if (request.data == "dynamic_genre") {
             val genreRows = mutableListOf<HomePageList>()
             
-            for (genreName in genreList) {
-                if (genreName == "All") continue
-
-                val bodyData = "1|1;classify=Hindi dub;genre=$genreName"
+            for (genreName in genreList.filter { it != "All" }.take(10)) {
                 val url = "$mainUrl/wefeed-mobile-bff/subject-api/list"
-                val signature = generateXTrSignature("POST", "application/json", "application/json; charset=utf-8", url, bodyData)
-                
+                val bodyJson = """{"page":1,"perPage":$perPage,"channelId":"1","classify":"Hindi dub","genre":"$genreName","sort":"ForYou"}"""
+                val signature = generateXTrSignature("POST", "application/json", "application/json", url, bodyJson)
+
                 val responseText = try {
                     app.post(url, headers = mapOf(
                         "x-client-token" to generateXClientToken(),
                         "x-tr-signature" to signature,
                         "content-type" to "application/json",
                         "accept" to "application/json"
-                    ), requestBody = bodyData.toRequestBody("application/json".toMediaType())).text
+                    ), requestBody = bodyJson.toRequestBody("application/json".toMediaType())).text
                 } catch (e: Exception) { null }
 
                 val items = try {
@@ -246,7 +244,7 @@ class MovieBoxProvider : MainAPI() {
         } else ""
 
         val signature = generateXTrSignature(if (isPost) "POST" else "GET", "application/json", "application/json", url, if(isPost) bodyJson else null)
-        
+
         val response = if (isPost) {
             app.post(url, headers = mapOf(
                 "x-client-token" to generateXClientToken(),
