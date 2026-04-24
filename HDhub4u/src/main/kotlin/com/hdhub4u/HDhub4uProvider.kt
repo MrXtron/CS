@@ -38,7 +38,7 @@ import java.text.Normalizer
 
 class HDhub4uProvider : MainAPI() {
     override var mainUrl: String = runBlocking {
-        HDhub4uPlugin.getDomains()?.HDHUB4u ?: "https://new6.hdhub4u.fo"
+        HDhub4uPlugin.getDomains()?.HDHUB4u ?: "https://hdhub4u.rehab"
     }
     override var name = "HDHub4U"
     override var lang = "hi"
@@ -58,7 +58,6 @@ class HDhub4uProvider : MainAPI() {
 
     override val mainPage = mainPageOf(
         "category/bollywood-movies" to "Bollywood",
-        "category/hollywood-movies" to "Hollywood",
         "category/hindi-dubbed" to "Hindi Dubbed",
         "category/south-hindi-movies" to "South Hindi Dubbed",
         "category/category/web-series" to "Web Series",
