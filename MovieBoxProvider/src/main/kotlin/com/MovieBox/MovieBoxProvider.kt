@@ -59,14 +59,6 @@ class MovieBoxProvider : MainAPI() {
     private val secretKeyDefault = base64Decode("NzZpUmwwN3MweFNOOWpxbUVXQXQ3OUVCSlp1bElRSXNWNjRGWnIyTw==")
     private val secretKeyAlt = base64Decode("WHFuMm5uTzQxL0w5Mm8xaXVYaFNMSFRiWHZZNFo1Wlo2Mm04bVNMQQ==")
 
-    private val genreList = listOf(
-        "All", "Action", "Adventure", "Animation", "Biography", "Comedy", "Crime",
-        "Documentary", "Drama", "Family", "Fantasy", "Film-Noir", "Game-Show",
-        "History", "Horror", "Music", "Musical", "Mystery", "News", "Reality-TV",
-        "Romance", "Sci-Fi", "Short", "Sport", "Talk-Show", "Thriller", "War",
-        "Western", "Other"
-    )
-
         private fun md5(input: ByteArray): String {
         return MessageDigest.getInstance("MD5").digest(input)
             .joinToString("") { "%02x".format(it) }
@@ -183,99 +175,111 @@ class MovieBoxProvider : MainAPI() {
         "8788126208987989488" to "Chinese Drama",
         "3910636007619709856" to "Western TV",
         "5177200225164885656" to "Turkish Drama",
-        "dynamic_genre" to "Browse by Genre"
-    )
+        "1|1;classify=Hindi dub;genre=Action" to "Action (Movies)",
+        "1|1;classify=Hindi dub;genre=Crime" to "Crime (Movies)",
+        "1|1;classify=Hindi dub;genre=Comedy" to "Comedy (Movies)",
+        "1|2;classify=Hindi dub;genre=Crime" to "Crime (Series)",
+        "1|2;classify=Hindi dub;genre=Comedy" to "Comedy (Series)",
+        )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val perPage = 15
-        
-        if (request.data == "dynamic_genre") {
-            val genreRows = mutableListOf<HomePageList>()
-            
-            for (genreName in genreList.filter { it != "All" }.take(10)) {
-                val url = "$mainUrl/wefeed-mobile-bff/subject-api/list"
-                val bodyJson = """{"page":1,"perPage":$perPage,"channelId":"1","classify":"Hindi dub","genre":"$genreName","sort":"ForYou"}"""
-                val signature = generateXTrSignature("POST", "application/json", "application/json", url, bodyJson)
+        val url = if (request.data.contains("|")) "$mainUrl/wefeed-mobile-bff/subject-api/list" else "$mainUrl/wefeed-mobile-bff/tab/ranking-list?tabId=0&categoryType=${request.data}&page=$page&perPage=$perPage"
 
-                val responseText = try {
-                    app.post(url, headers = mapOf(
-                        "x-client-token" to generateXClientToken(),
-                        "x-tr-signature" to signature,
-                        "content-type" to "application/json",
-                        "accept" to "application/json"
-                    ), requestBody = bodyJson.toRequestBody("application/json".toMediaType())).text
-                } catch (e: Exception) { null }
+        val data1 = request.data
 
-                val items = try {
-                    val root = jacksonObjectMapper().readTree(responseText ?: "")
-                    val nodes = root["data"]?.get("items") ?: root["data"]?.get("subjects")
-                    nodes?.mapNotNull { item ->
-                        newMovieSearchResponse(
-                            item["title"]?.asText()?.substringBefore("[") ?: return@mapNotNull null,
-                            item["subjectId"]?.asText() ?: return@mapNotNull null,
-                            if (item["subjectType"]?.asInt() == 2) TvType.TvSeries else TvType.Movie
-                        ) {
-                            this.posterUrl = item["cover"]?.get("url")?.asText()
-                            this.score = Score.from10(item["imdbRatingValue"]?.asText())
-                        }
+        val mainParts = data1.substringBefore(";").split("|")
+        val pg = mainParts.getOrNull(0)?.toIntOrNull() ?: 1
+        val channelId = mainParts.getOrNull(1)
+
+        val options = mutableMapOf<String, String>()
+        data1.substringAfter(";", "")
+            .split(";")
+            .forEach {
+                val (k, v) = it.split("=").let { p ->
+                    p.getOrNull(0) to p.getOrNull(1)
+                }
+                if (!k.isNullOrBlank() && !v.isNullOrBlank()) {
+                    options[k] = v
+                }
+            }
+
+        val classify = options["classify"] ?: "All"
+        val country  = options["country"] ?: "All"
+        val year     = options["year"] ?: "All"
+        val genre    = options["genre"] ?: "All"
+        val sort     = options["sort"] ?: "ForYou"
+
+        val jsonBody = """{"page":$pg,"perPage":$perPage,"channelId":"$channelId","classify":"$classify","country":"$country","year":"$year","genre":"$genre","sort":"$sort"}"""
+
+        // Use current timestamps instead of hardcoded ones
+        val xClientToken = generateXClientToken()
+        val xTrSignature = generateXTrSignature("POST", "application/json", "application/json; charset=utf-8", url , jsonBody)
+
+        val getxTrSignature = generateXTrSignature("GET", "application/json", "application/json", url)
+
+        val headers = mapOf(
+            "user-agent" to "com.community.mbox.in/50020042 (Linux; U; Android 16; en_IN; sdk_gphone64_x86_64; Build/BP22.250325.006; Cronet/133.0.6876.3)",
+            "accept" to "application/json",
+            "content-type" to "application/json",
+            "connection" to "keep-alive",
+            "x-client-token" to xClientToken,
+            "x-tr-signature" to xTrSignature,
+            "x-client-info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.03.0529.03","version_code":50020042,"os":"android","os_version":"16","device_id":"$deviceId","install_store":"ps","gaid":"d7578036d13336cc","brand":"google","model":"${randomBrandModel()}","system_language":"en","net":"NETWORK_WIFI","region":"IN","timezone":"Asia/Calcutta","sp_code":""}""",
+            "x-client-status" to "0",
+            "x-play-mode" to "2" // Optional, if needed for specific API behavior
+        )
+
+        val getheaders = mapOf(
+            "user-agent" to "com.community.mbox.in/50020042 (Linux; U; Android 16; en_IN; sdk_gphone64_x86_64; Build/BP22.250325.006; Cronet/133.0.6876.3)",
+            "accept" to "application/json",
+            "content-type" to "application/json",
+            "connection" to "keep-alive",
+            "x-client-token" to xClientToken,
+            "x-tr-signature" to getxTrSignature,
+            "x-client-info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.03.0529.03","version_code":50020042,"os":"android","os_version":"16","device_id":"$deviceId","install_store":"ps","gaid":"d7578036d13336cc","brand":"google","model":"sdk_gphone64_x86_64","system_language":"en","net":"NETWORK_WIFI","region":"IN","timezone":"Asia/Calcutta","sp_code":""}""",
+            "x-client-status" to "0",
+        )
+
+            val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
+            val response = if (request.data.contains("|")) app.post(url, headers = headers, requestBody = requestBody) else app.get(url, headers = getheaders)
+
+            val responseBody = response.text
+            // Use Jackson to parse the new API response structure
+            val data = try {
+                val mapper = jacksonObjectMapper()
+                val root = mapper.readTree(responseBody)
+                val items = root["data"]?.get("items") ?: root["data"]?.get("subjects") ?: return newHomePageResponse(emptyList())
+                items.mapNotNull { item ->
+                    val title = item["title"]?.asText()?.substringBefore("[") ?: return@mapNotNull null
+                    val id = item["subjectId"]?.asText() ?: return@mapNotNull null
+                    val coverImg = item["cover"]?.get("url")?.asText()
+                    val subjectType = item["subjectType"]?.asInt() ?: 1
+                    val type = when (subjectType) {
+                        1 -> TvType.Movie
+                        2 -> TvType.TvSeries
+                        else -> TvType.Movie
                     }
-                } catch (e: Exception) { null } ?: emptyList()
-
-                if (items.isNotEmpty()) {
-                    genreRows.add(HomePageList(genreName, items))
+                    newMovieSearchResponse(
+                        name = title,
+                        url = id,
+                        type = type
+                    ) {
+                        this.posterUrl = coverImg
+                        this.score = Score.from10(item["imdbRatingValue"]?.asText())
+                    }
                 }
-            }
-            return newHomePageResponse(genreRows, hasNext = false)
-        }
+            } catch (_: Exception) {
+                null
+            } ?: emptyList()
 
-        val isPost = request.data.contains("|")
-        val url = if (isPost) "$mainUrl/wefeed-mobile-bff/subject-api/list" 
-                  else "$mainUrl/wefeed-mobile-bff/tab/ranking-list?tabId=0&categoryType=${request.data}&page=$page&perPage=$perPage"
+            return newHomePageResponse(
+                listOf(
+                    HomePageList(request.name, data)
+                )
+            )
 
-        val bodyJson = if (isPost) {
-            val mainParts = request.data.substringBefore(";").split("|")
-            val channelId = mainParts.getOrNull(1)
-            val options = mutableMapOf<String, String>()
-            request.data.substringAfter(";", "").split(";").forEach {
-                val p = it.split("=")
-                if (p.size == 2) options[p[0]] = p[1]
-            }
-            """{"page":$page,"perPage":$perPage,"channelId":"$channelId","classify":"${options["classify"] ?: "All"}","country":"${options["country"] ?: "All"}","year":"${options["year"] ?: "All"}","genre":"${options["genre"] ?: "All"}","sort":"ForYou"}"""
-        } else ""
-
-        val signature = generateXTrSignature(if (isPost) "POST" else "GET", "application/json", "application/json", url, if(isPost) bodyJson else null)
-
-        val response = if (isPost) {
-            app.post(url, headers = mapOf(
-                "x-client-token" to generateXClientToken(),
-                "x-tr-signature" to signature,
-                "content-type" to "application/json"
-            ), requestBody = bodyJson.toRequestBody("application/json".toMediaType()))
-        } else {
-            app.get(url, headers = mapOf(
-                "x-client-token" to generateXClientToken(),
-                "x-tr-signature" to signature
-            ))
-        }
-
-        val data = try {
-            val root = jacksonObjectMapper().readTree(response.text)
-            val items = root["data"]?.get("items") ?: root["data"]?.get("subjects") ?: return newHomePageResponse(emptyList())
-            items.mapNotNull { item ->
-                newMovieSearchResponse(
-                    item["title"]?.asText()?.substringBefore("[") ?: return@mapNotNull null,
-                    item["subjectId"]?.asText() ?: return@mapNotNull null,
-                    if (item["subjectType"]?.asInt() == 2) TvType.TvSeries else TvType.Movie
-                ) {
-                    this.posterUrl = item["cover"]?.get("url")?.asText()
-                    this.score = Score.from10(item["imdbRatingValue"]?.asText())
-                }
-            }
-        } catch (_: Exception) { emptyList() }
-
-        return newHomePageResponse(listOf(HomePageList(request.name ?: "", data)), true)
     }
-
 
     override suspend fun search(query: String,page: Int): SearchResponseList {
         val url = "$mainUrl/wefeed-mobile-bff/subject-api/search/v2"
