@@ -13,7 +13,7 @@ import org.json.JSONObject
 import java.net.URI
 
 open class RogmoviesProvider : MainAPI() {
-    override var mainUrl = "https://rogmovies.vip"
+    override var mainUrl = "https://rogmovies.blog"
     override var name = "Rogmovies"
     override val hasMainPage = true
     override var lang = "hi"
