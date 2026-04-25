@@ -14,7 +14,8 @@ class PrmoviesProvider : MainAPI() {
     override val supportedTypes = setOf(TvType.Movie, TvType.TvSeries)
 
     private val commonHeaders = mapOf(
-        "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
         "Referer" to "$mainUrl/"
     )
 
@@ -29,15 +30,14 @@ class PrmoviesProvider : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val url = if (page == 1) request.data.removeSuffix("page/") else "${request.data}$page"
-        val document = app.get(url, headers = commonHeaders).document
-        val home = document.select("div.ml-item, .item, .movies-list .ml-item").mapNotNull { it.toSearchResult() }
+        val url = if (page == 1) request.data.removeSuffix("page/").removeSuffix("/") else "${request.data}$page/"
+        val document = app.get(url, headers = commonHeaders, interceptor = CloudflareKiller()).document
+        val home = document.select("div.item, article.item, .ml-item").mapNotNull { it.toSearchResult() }
         return newHomePageResponse(request.name, home)
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
-        val titleElement = this.selectFirst(".mli-info h2, h2, h3, a") ?: return null
-        val title = titleElement.text().trim()
+        val title = this.selectFirst(".title, h2, h3")?.text()?.trim() ?: return null
         val href = fixUrl(this.selectFirst("a")?.attr("href") ?: return null)
         val img = this.selectFirst("img")
         val posterUrl = fixUrlNull(
@@ -52,18 +52,18 @@ class PrmoviesProvider : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val document = app.get("$mainUrl/?s=$query", headers = commonHeaders).document
-        return document.select("div.ml-item, .item, .movies-list .ml-item").mapNotNull { it.toSearchResult() }
+        val document = app.get("$mainUrl/?s=$query", headers = commonHeaders, interceptor = CloudflareKiller()).document
+        return document.select("div.item, article.item, .ml-item").mapNotNull { it.toSearchResult() }
     }
 
     override suspend fun load(url: String): LoadResponse? {
-        val document = app.get(url, headers = commonHeaders).document
-        val title = document.selectFirst("h1, h2, .mvic-desc h3")?.text()?.trim() ?: return null
+        val document = app.get(url, headers = commonHeaders, interceptor = CloudflareKiller()).document
+        val title = document.selectFirst("h1.entry-title, .mvic-desc h3, .data h1")?.text()?.trim() ?: return null
         val poster = fixUrlNull(document.selectFirst(".poster img, .thumb img, .mvic-thumb img")?.attr("src"))
         
-        val episodes = document.select(".les-content a, .episodios a").map {
+        val episodes = document.select(".les-content a, .episodios a, #video-player-content a").map {
             newEpisode(it.attr("href")) {
-                this.name = it.text().replace("Server Ep", "Episode").trim()
+                this.name = it.text().trim()
             }
         }
 
@@ -86,8 +86,8 @@ class PrmoviesProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val document = app.get(data, headers = commonHeaders).document
-        document.select("iframe, .movieplay iframe").forEach { 
+        val document = app.get(data, headers = commonHeaders, interceptor = CloudflareKiller()).document
+        document.select("iframe, .movieplay iframe, #video-player-content iframe").forEach { 
             val source = fixUrl(it.attr("src"))
             if (source.isNotEmpty() && !source.contains("youtube")) {
                 safeApiCall { loadExtractor(source, data, subtitleCallback, callback) }
