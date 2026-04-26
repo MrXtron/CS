@@ -160,7 +160,7 @@ class MovieBoxProvider : MainAPI() {
     }
 
     override val mainPage = mainPageOf(
-        "4516404531735022304" to "Trending",
+        "8610422883619422240" to "Trending",
         "5692654647815587592" to "Trending in Cinema",
         "1|1;country=India" to "Indian (Movies)",
         "414907768299210008"  to "Bollywood",
