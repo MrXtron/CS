@@ -1,4 +1,4 @@
-## 🌐 Only Hindi Plugins of Them 
+## 🌐 Hindi Plugins inspired by:
 
 ### 🔹 Phisher (phisherrepo Cloudstream Plugin)
 https://github.com/phisher98/cloudstream-extensions-phisher
