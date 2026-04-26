@@ -31,7 +31,7 @@ class PrmoviesProvider : MainAPI() {
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val url = if (page == 1) request.data.removeSuffix("page/").removeSuffix("/") else "${request.data}$page/"
-        val document = app.get(url, headers = commonHeaders, interceptor = CloudflareKiller()).document
+        val document = app.get(url, headers = commonHeaders).document
         val home = document.select("div.item, article.item, .ml-item").mapNotNull { it.toSearchResult() }
         return newHomePageResponse(request.name, home)
     }
@@ -52,15 +52,15 @@ class PrmoviesProvider : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val document = app.get("$mainUrl/?s=$query", headers = commonHeaders, interceptor = CloudflareKiller()).document
+        val document = app.get("$mainUrl/?s=$query", headers = commonHeaders).document
         return document.select("div.item, article.item, .ml-item").mapNotNull { it.toSearchResult() }
     }
 
     override suspend fun load(url: String): LoadResponse? {
-        val document = app.get(url, headers = commonHeaders, interceptor = CloudflareKiller()).document
+        val document = app.get(url, headers = commonHeaders).document
         val title = document.selectFirst("h1.entry-title, .mvic-desc h3, .data h1")?.text()?.trim() ?: return null
         val poster = fixUrlNull(document.selectFirst(".poster img, .thumb img, .mvic-thumb img")?.attr("src"))
-        
+
         val episodes = document.select(".les-content a, .episodios a, #video-player-content a").map {
             newEpisode(it.attr("href")) {
                 this.name = it.text().trim()
@@ -86,7 +86,7 @@ class PrmoviesProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val document = app.get(data, headers = commonHeaders, interceptor = CloudflareKiller()).document
+        val document = app.get(data, headers = commonHeaders).document
         document.select("iframe, .movieplay iframe, #video-player-content iframe").forEach { 
             val source = fixUrl(it.attr("src"))
             if (source.isNotEmpty() && !source.contains("youtube")) {
