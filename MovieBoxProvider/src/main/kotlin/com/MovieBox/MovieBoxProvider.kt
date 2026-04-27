@@ -175,11 +175,19 @@ class MovieBoxProvider : MainAPI() {
         "8788126208987989488" to "Chinese Drama",
         "3910636007619709856" to "Western TV",
         "5177200225164885656" to "Turkish Drama",
-        "1|1;classify=Hindi dub;genre=Action" to "Action (Movies)",
-        "1|1;classify=Hindi dub;genre=Crime" to "Crime (Movies)",
-        "1|1;classify=Hindi dub;genre=Comedy" to "Comedy (Movies)",
-        "1|2;classify=Hindi dub;genre=Crime" to "Crime (Series)",
-        "1|2;classify=Hindi dub;genre=Comedy" to "Comedy (Series)",
+        "1|1;country=India;classify=Hindi dub;genre=Action" to "Action (Movies)",
+        "1|1;country=India;classify=Hindi dub;genre=Adventure" to "Adventure (Movies)",
+        "1|1;country=India;classify=Hindi dub;genre=Comedy" to "Comedy (Movies)",
+        "1|1;country=India;classify=Hindi dub;genre=Crime" to "Crime (Movies)",
+        "1|2;country=India;classify=Hindi dub;genre=Drama" to "Drama (Movies)",
+        "1|1;country=India;classify=Hindi dub;genre=Family" to "Family (Movies)",
+        "1|1;country=India;classify=Hindi dub;genre=Horror" to "Horror (Movies)",
+        "1|1;country=India;classify=Hindi dub;genre=Romance" to "Romance (Movies)",
+        "1|1;country=India;classify=Hindi dub;genre=Sci-Fi" to "Sci-Fi (Movies)",
+        "1|1;country=India;classify=Hindi dub;genre=Thriller" to "Thriller (Movies)",
+        "1|1;country=India;classify=Hindi dub;genre=War" to "War (Movies)",
+        "1|2;country=India;classify=Hindi dub;genre=Crime" to "Crime (Series)",
+        "1|2;country=India;classify=Hindi dub;genre=Comedy" to "Comedy (Series)"
         )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {

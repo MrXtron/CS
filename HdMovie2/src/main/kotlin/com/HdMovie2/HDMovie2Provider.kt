@@ -31,8 +31,7 @@ class HDMovie2Provider : MainAPI() {
         "genre/horror" to "Horror",
         "genre/science-fiction" to "Science Fiction",
         "genre/thriller" to "Thriller",
-        "genre/drama" to "Drama",
-        "genre/unofficial-hindi-dubbed" to "Unofficial Hindi Dubbed"
+        "genre/drama" to "Drama"
     )
 
     private suspend fun fixUrl() {
