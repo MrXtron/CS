@@ -37,8 +37,11 @@ import java.text.Normalizer
 
 
 class HDhub4uProvider : MainAPI() {
-    override var mainUrl: String = runBlocking {
-        HDhub4uPlugin.getDomains()?.HDHUB4u ?: "https://new7.hdhub4u.fo"
+    override var mainUrl: String = "https://new7.hdhub4u.fo"
+    get() {
+        return runBlocking {
+            HDhub4uPlugin.getDomains()?.HDHUB4u ?: field
+        }
     }
     override var name = "HDHub4U"
     override var lang = "hi"
