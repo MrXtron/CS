@@ -40,7 +40,7 @@ class HDhub4uProvider : MainAPI() {
     override var mainUrl: String = "https://new7.hdhub4u.fo"
     get() {
         return runBlocking {
-            HDhub4uPlugin.getDomains()?.HDHUB4u ?: field
+            HDhub4uPlugin.getDomains()?.HdHub4U ?: field
         }
     }
     override var name = "HDHub4U"
