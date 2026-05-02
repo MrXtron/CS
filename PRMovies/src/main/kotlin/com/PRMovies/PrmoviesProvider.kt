@@ -1,6 +1,6 @@
 package com.PRMovies
 
-import com.lagradost.cloudstream3.*
+import com.laggradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.mvvm.safeApiCall
 import org.jsoup.nodes.Element
@@ -40,6 +40,7 @@ class PrmoviesProvider : MainAPI() {
     private fun Element.toSearchResult(): SearchResponse? {
         val title = this.selectFirst(".mli-info h2, h2, .title")?.text()?.trim() ?: return null
         val href = this.selectFirst("a")?.attr("href") ?: return null
+        val fixedHref = fixUrl(href)
         
         val img = this.selectFirst("img")
         val posterUrl = fixUrlNull(
@@ -49,7 +50,7 @@ class PrmoviesProvider : MainAPI() {
         )
         val quality = this.selectFirst(".mli-quality")?.text()?.trim()
 
-        return newMovieSearchResponse(title, fixUrl(href), TvType.Movie) { 
+        return newMovieSearchResponse(title, fixedHref, TvType.Movie) { 
             this.posterUrl = posterUrl
             addQuality(quality)
         }
