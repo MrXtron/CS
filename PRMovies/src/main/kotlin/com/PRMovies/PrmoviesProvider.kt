@@ -40,12 +40,13 @@ class PrmoviesProvider : MainAPI() {
     private fun Element.toSearchResult(): SearchResponse? {
         val title = this.selectFirst(".mli-info h2, h2, .title")?.text()?.trim() ?: return null
         val href = this.selectFirst("a")?.attr("href") ?: return null
+        val fixedHref = fixUrl(href)
         
         val img = this.selectFirst("img")
         val poster = img?.attr("data-original") ?: img?.attr("data-src") ?: img?.attr("src")
         val quality = this.selectFirst(".mli-quality")?.text()?.trim()
 
-        return newMovieSearchResponse(title, fixUrl(href), TvType.Movie) { 
+        return newMovieSearchResponse(title, fixedHref, TvType.Movie) { 
             this.posterUrl = fixUrlNull(poster)
             addQuality(quality)
         }
