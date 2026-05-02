@@ -42,11 +42,11 @@ class PrmoviesProvider : MainAPI() {
         val href = this.selectFirst("a")?.attr("href") ?: return null
         
         val img = this.selectFirst("img")
-        val posterUrl = img?.attr("data-original") ?: img?.attr("data-src") ?: img?.attr("src")
+        val poster = img?.attr("data-original") ?: img?.attr("data-src") ?: img?.attr("src")
         val quality = this.selectFirst(".mli-quality")?.text()?.trim()
 
         return newMovieSearchResponse(title, fixUrl(href), TvType.Movie) { 
-            this.posterUrl = posterUrl
+            this.posterUrl = fixUrlNull(poster)
             addQuality(quality)
         }
     }
@@ -71,11 +71,11 @@ class PrmoviesProvider : MainAPI() {
 
         return if (tvType == TvType.TvSeries) {
             newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
-                this.posterUrl = poster
+                this.posterUrl = fixUrlNull(poster)
             }
         } else {
             newMovieLoadResponse(title, url, TvType.Movie, url) {
-                this.posterUrl = poster
+                this.posterUrl = fixUrlNull(poster)
             }
         }
     }
