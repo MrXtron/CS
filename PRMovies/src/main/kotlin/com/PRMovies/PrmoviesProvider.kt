@@ -46,7 +46,7 @@ class PrmoviesProvider : MainAPI() {
         val quality = this.selectFirst(".mli-quality")?.text()?.trim()
 
         return newMovieSearchResponse(title, fixUrl(href), TvType.Movie) { 
-            this.posterUrl = fixUrlNull(posterUrl)
+            this.posterUrl = posterUrl
             addQuality(quality)
         }
     }
@@ -59,7 +59,7 @@ class PrmoviesProvider : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         val document = app.get(url, headers = commonHeaders).document
         val title = document.selectFirst("h1.entry-title, .mvic-desc h3, .data h1")?.text()?.trim() ?: return null
-        val poster = fixUrlNull(document.selectFirst(".poster img, .thumb img, .mvic-thumb img")?.attr("src"))
+        val poster = document.selectFirst(".poster img, .thumb img, .mvic-thumb img")?.attr("src")
 
         val episodes = document.select(".les-content a, .episodios a, #video-player-content a").map {
             newEpisode(it.attr("href")) {
