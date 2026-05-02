@@ -16,7 +16,8 @@ class PrmoviesProvider : MainAPI() {
     private val commonHeaders = mapOf(
         "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
         "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-        "Referer" to "$mainUrl/"
+        "Referer" to "$mainUrl/",
+        "Accept-Language" to "en-US,en;q=0.5"
     )
 
     override val mainPage = mainPageOf(
@@ -32,28 +33,30 @@ class PrmoviesProvider : MainAPI() {
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val url = if (page == 1) request.data.removeSuffix("page/").removeSuffix("/") else "${request.data}$page/"
         val document = app.get(url, headers = commonHeaders).document
-        val home = document.select("div.item, article.item, .ml-item").mapNotNull { it.toSearchResult() }
+        val home = document.select("div.ml-item").mapNotNull { it.toSearchResult() }
         return newHomePageResponse(request.name, home)
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
-        val title = this.selectFirst(".title, h2, h3")?.text()?.trim() ?: return null
-        val href = fixUrl(this.selectFirst("a")?.attr("href") ?: return null)
+        val title = this.selectFirst(".mli-info h2, h2, .title")?.text()?.trim() ?: return null
+        val href = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
         val img = this.selectFirst("img")
         val posterUrl = fixUrlNull(
             img?.attr("data-original") ?: 
             img?.attr("data-src") ?: 
             img?.attr("src")
         )
+        val quality = this.selectFirst(".mli-quality")?.text()?.trim()
 
         return newMovieSearchResponse(title, href, TvType.Movie) { 
-            this.posterUrl = posterUrl 
+            this.posterUrl = posterUrl
+            addQuality(quality)
         }
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
         val document = app.get("$mainUrl/?s=$query", headers = commonHeaders).document
-        return document.select("div.item, article.item, .ml-item").mapNotNull { it.toSearchResult() }
+        return document.select("div.ml-item").mapNotNull { it.toSearchResult() }
     }
 
     override suspend fun load(url: String): LoadResponse? {
@@ -88,8 +91,9 @@ class PrmoviesProvider : MainAPI() {
     ): Boolean {
         val document = app.get(data, headers = commonHeaders).document
         document.select("iframe, .movieplay iframe, #video-player-content iframe").forEach { 
-            val source = fixUrl(it.attr("src"))
-            if (source.isNotEmpty() && !source.contains("youtube")) {
+            val src = it.attr("src").ifEmpty { it.attr("data-src") }
+            val source = fixUrl(src)
+            if (source.isNotEmpty() && !source.contains("youtube") && !source.contains("google")) {
                 safeApiCall { loadExtractor(source, data, subtitleCallback, callback) }
             }
         }
