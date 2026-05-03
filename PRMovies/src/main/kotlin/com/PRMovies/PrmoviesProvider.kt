@@ -48,7 +48,7 @@ class PrmoviesProvider : MainAPI() {
 
         return newMovieSearchResponse(title, fixedHref, TvType.Movie) { 
             this.posterUrl = fixUrlNull(poster)
-            addQuality(quality)
+            if (quality != null) addQuality(quality)
         }
     }
 
@@ -62,8 +62,9 @@ class PrmoviesProvider : MainAPI() {
         val title = document.selectFirst("h1.entry-title, .mvic-desc h3, .data h1")?.text()?.trim() ?: return null
         val poster = document.selectFirst(".poster img, .thumb img, .mvic-thumb img")?.attr("src")
 
-        val episodes = document.select(".les-content a, .episodios a, #video-player-content a").map {
-            newEpisode(it.attr("href")) {
+        val episodes = document.select(".les-content a, .episodios a, #video-player-content a").mapNotNull {
+            val href = it.attr("href") ?: return@mapNotNull null
+            newEpisode(href) {
                 this.name = it.text().trim()
             }
         }
@@ -80,23 +81,23 @@ class PrmoviesProvider : MainAPI() {
             }
         }
     }
-override suspend fun loadLinks(
-    data: String,
-    isCasting: Boolean,
-    subtitleCallback: (SubtitleFile) -> Unit,
-    callback: (ExtractorLink) -> Unit
-): Boolean {
-    val document = app.get(data, headers = commonHeaders).document
-    document.select("iframe, .movieplay iframe, #video-player-content iframe").forEach { 
-        listOf(it.attr("src"), it.attr("data-src"))
-            .firstOrNull { it.isNotEmpty() }
-            ?.let { src ->
+
+    override suspend fun loadLinks(
+        data: String,
+        isCasting: Boolean,
+        subtitleCallback: (SubtitleFile) -> Unit,
+        callback: (ExtractorLink) -> Unit
+    ): Boolean {
+        val document = app.get(data, headers = commonHeaders).document
+        document.select("iframe, .movieplay iframe, #video-player-content iframe").forEach { 
+            val src = it.attr("src").ifEmpty { it.attr("data-src") }
+            if (src.isNotEmpty()) {
                 val source = fixUrl(src)
                 if (!source.contains("youtube") && !source.contains("google")) {
                     safeApiCall { loadExtractor(source, data, subtitleCallback, callback) }
                 }
             }
+        }
+        return true
     }
-    return true
-}
 }
