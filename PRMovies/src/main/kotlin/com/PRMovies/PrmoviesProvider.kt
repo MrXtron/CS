@@ -73,8 +73,7 @@ class PrmoviesProvider : MainAPI() {
             val document = app.get(
                 fixedUrl, 
                 headers = commonHeaders,
-                timeout = 30L,
-                retries = 3
+                timeout = 30L
             ).document
             
             val home = document.select("div.ml-item").mapNotNull { it.toSearchResult() }
@@ -109,8 +108,7 @@ class PrmoviesProvider : MainAPI() {
             val document = app.get(
                 "$workingUrl/?s=$query", 
                 headers = commonHeaders,
-                timeout = 30L,
-                retries = 2
+                timeout = 30L
             ).document
             document.select("div.ml-item").mapNotNull { it.toSearchResult() }
         } catch (e: Exception) {
@@ -123,8 +121,7 @@ class PrmoviesProvider : MainAPI() {
             val document = app.get(
                 url, 
                 headers = commonHeaders,
-                timeout = 30L,
-                retries = 2
+                timeout = 30L
             ).document
             
             val title = document.selectFirst("h1.entry-title, .mvic-desc h3, .data h1")?.text()?.trim() ?: return null
@@ -163,8 +160,7 @@ class PrmoviesProvider : MainAPI() {
             val document = app.get(
                 data, 
                 headers = commonHeaders,
-                timeout = 30L,
-                retries = 2
+                timeout = 30L
             ).document
             
             val iframes = document.select("iframe, .movieplay iframe, #video-player-content iframe, .player iframe, [src*='iframe']")
