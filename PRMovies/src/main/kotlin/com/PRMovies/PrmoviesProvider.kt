@@ -80,21 +80,20 @@ class PrmoviesProvider : MainAPI() {
             }
         }
     }
-
-    override suspend fun loadLinks(
-        data: String,
-        isCasting: Boolean,
-        subtitleCallback: (SubtitleFile) -> Unit,
-        callback: (ExtractorLink) -> Unit
-    ): Boolean {
-        val document = app.get(data, headers = commonHeaders).document
-        document.select("iframe, .movieplay iframe, #video-player-content iframe").forEach { 
-            val src = it.attr("src").ifEmpty { it.attr("data-src") }
-            val source = fixUrl(src)
-            if (source.isNotEmpty() && !source.contains("youtube") && !source.contains("google")) {
-                safeApiCall { loadExtractor(source, data, subtitleCallback, callback) }
-            }
+override suspend fun loadLinks(
+    data: String,
+    isCasting: Boolean,
+    subtitleCallback: (SubtitleFile) -> Unit,
+    callback: (ExtractorLink) -> Unit
+): Boolean {
+    val document = app.get(data, headers = commonHeaders).document
+    document.select("iframe, .movieplay iframe, #video-player-content iframe").forEach { 
+        val src = it.attr("src").ifEmpty { it.attr("data-src") } ?: return@forEach
+        val source = fixUrl(src)
+        if (source.isNotEmpty() && !source.contains("youtube") && !source.contains("google")) {
+            safeApiCall { loadExtractor(source, data, subtitleCallback, callback) }
         }
-        return true
     }
+    return true
+}
 }
