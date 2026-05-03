@@ -88,11 +88,14 @@ override suspend fun loadLinks(
 ): Boolean {
     val document = app.get(data, headers = commonHeaders).document
     document.select("iframe, .movieplay iframe, #video-player-content iframe").forEach { 
-        val src = it.attr("src").ifEmpty { it.attr("data-src") } ?: return@forEach
-        val source = fixUrl(src)
-        if (source.isNotEmpty() && !source.contains("youtube") && !source.contains("google")) {
-            safeApiCall { loadExtractor(source, data, subtitleCallback, callback) }
-        }
+        listOf(it.attr("src"), it.attr("data-src"))
+            .firstOrNull { it.isNotEmpty() }
+            ?.let { src ->
+                val source = fixUrl(src)
+                if (!source.contains("youtube") && !source.contains("google")) {
+                    safeApiCall { loadExtractor(source, data, subtitleCallback, callback) }
+                }
+            }
     }
     return true
 }
