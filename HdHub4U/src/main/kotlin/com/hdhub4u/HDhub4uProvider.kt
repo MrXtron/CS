@@ -35,15 +35,14 @@ import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import java.text.Normalizer
 
-override var mainUrl: String = "https://new1.hdhub4u.limo"
-
-private suspend fun initializeDomains() {
-    try {
-        val domains = HDhub4uPlugin.getDomains()
-        mainUrl = domains?.HdHub4U ?: mainUrl
-    } catch (e: Exception) {
+class HDhub4uProvider : MainAPI() {
+    override var mainUrl: String = "https://new1.hdhub4u.limo"
+    get() {
+        return runBlocking {
+            HDhub4uPlugin.getDomains()?.HdHub4U ?: field
+        }
     }
-}    
+    
     override var name = "HDHub4U"
     override var lang = "hi"
     override val hasMainPage = true
