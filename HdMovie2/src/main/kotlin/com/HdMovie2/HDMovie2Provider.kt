@@ -7,10 +7,13 @@ import org.jsoup.Jsoup
 import java.util.Calendar
 
 class HDMovie2Provider : MainAPI() {
-    override var mainUrl: String = runBlocking {
-        HDMovie2Plugin.getDomains()?.hdmovie2 ?: "https://hdmovie2.com.se"
+    override var mainUrl: String = "https://hdmovie2.com.se"
+    get() {
+        return runBlocking {
+            HDMovie2Plugin.getDomains()?.hdmovie2 ?: field
+        }
     }
-}
+    
     override var name = "Hdmovie2"
     override var lang = "hi"
     override val hasMainPage = true
