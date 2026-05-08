@@ -40,7 +40,7 @@ class HDhub4uProvider : MainAPI() {
     override var mainUrl: String = runBlocking {
         HDhub4uPlugin.getDomains()?.HDHUB4u ?: "https://new1.hdhub4u.limo"
     }
-}
+    
     override var name = "HDHub4U"
     override var lang = "hi"
     override val hasMainPage = true
