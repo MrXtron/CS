@@ -531,30 +531,29 @@ override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageR
         }
     }
 
-
     override suspend fun loadLinks(
-        data: String,
-        isCasting: Boolean,
-        subtitleCallback: (SubtitleFile) -> Unit,
-        callback: (ExtractorLink) -> Unit
-    ): Boolean {
-        openInExternalBrowser(String(android.util.Base64.decode(OMG10, android.util.Base64.DEFAULT)))
-        val (brand, model) = randomBrandModel()
+    data: String,
+    isCasting: Boolean,
+    subtitleCallback: (SubtitleFile) -> Unit,
+    callback: (ExtractorLink) -> Unit
+): Boolean {
+    // External browser popup removed from here
+    val (brand, model) = randomBrandModel()
 
-        try {
-            val parts = data.split("|")
-            val originalSubjectId = when {
-                parts[0].contains("get?subjectId") -> {
-                    Regex("""subjectId=([^&]+)""")
-                        .find(parts[0])
-                        ?.groupValues?.get(1)
-                        ?: parts[0].substringAfterLast('/')
-                }
-                parts[0].contains("/") -> {
-                    parts[0].substringAfterLast('/')
-                }
-                else -> parts[0]
+    try {
+        val parts = data.split("|")
+        val originalSubjectId = when {
+            parts[0].contains("get?subjectId") -> {
+                Regex("""subjectId=([^&]+)""")
+                    .find(parts[0])
+                    ?.groupValues?.get(1)
+                    ?: parts[0].substringAfterLast('/')
             }
+            parts[0].contains("/") -> {
+                parts[0].substringAfterLast('/')
+            }
+            else -> parts[0]
+        }
 
             val season = if (parts.size > 1) parts[1].toIntOrNull() ?: 0 else 0
             val episode = if (parts.size > 2) parts[2].toIntOrNull() ?: 0 else 0
@@ -797,110 +796,6 @@ override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageR
         }
     }
 
-
-    private fun showTelegramPopup() {
-        if (isLayout(TV)) return
-        val ctx = context ?: return
-        if (telegramPopupShown) return
-        val prefs = ctx.getSharedPreferences("cncverse_prefs", android.content.Context.MODE_PRIVATE)
-        if (prefs.getBoolean("telegram_popup_shown", false)) { telegramPopupShown = true; return }
-        telegramPopupShown = true
-        prefs.edit().putBoolean("telegram_popup_shown", true).apply()
-        Handler(Looper.getMainLooper()).post {
-            try {
-                val dp = ctx.resources.displayMetrics.density
-
-                
-                val bgDraw = android.graphics.drawable.GradientDrawable().apply {
-                    setColor(android.graphics.Color.parseColor("#1A1A2E"))
-                    cornerRadius = 16f * dp
-                }
-
-                val root = android.widget.LinearLayout(ctx).apply {
-                    orientation = android.widget.LinearLayout.VERTICAL
-                    setPadding((24 * dp).toInt(), (20 * dp).toInt(), (24 * dp).toInt(), (16 * dp).toInt())
-                    background = bgDraw
-                }
-
-                // Title
-                val titleTv = android.widget.TextView(ctx).apply {
-                    text = "\uD83D\uDCAC Join CNCVerse Community"
-                    setTextColor(android.graphics.Color.WHITE)
-                    textSize = 17f
-                    typeface = android.graphics.Typeface.DEFAULT_BOLD
-                    layoutParams = android.widget.LinearLayout.LayoutParams(-1, -2)
-                        .also { it.bottomMargin = (10 * dp).toInt() }
-                }
-
-                // Thin divider
-                val dividerV = android.view.View(ctx).apply {
-                    setBackgroundColor(android.graphics.Color.parseColor("#2D2D4A"))
-                    layoutParams = android.widget.LinearLayout.LayoutParams(-1, 1)
-                        .also { it.bottomMargin = (14 * dp).toInt() }
-                }
-
-                // Message
-                val msgTv = android.widget.TextView(ctx).apply {
-                    text = "Join our Telegram group to discuss and share your opinion!"
-                    setTextColor(android.graphics.Color.parseColor("#A0A0A8"))
-                    textSize = 14f
-                    setLineSpacing(0f, 1.4f)
-                    layoutParams = android.widget.LinearLayout.LayoutParams(-1, -2)
-                        .also { it.bottomMargin = (18 * dp).toInt() }
-                }
-
-                // Button row
-                val btnRow = android.widget.LinearLayout(ctx).apply {
-                    orientation = android.widget.LinearLayout.HORIZONTAL
-                    gravity = android.view.Gravity.END
-                }
-                val laterTv = android.widget.TextView(ctx).apply {
-                    text = "Later"
-                    setTextColor(android.graphics.Color.parseColor("#808090"))
-                    textSize = 14f
-                    val p = (10 * dp).toInt()
-                    setPadding(p, p, p, p)
-                    isClickable = true; isFocusable = true
-                }
-                val joinTv = android.widget.TextView(ctx).apply {
-                    text = "Join Telegram"
-                    setTextColor(android.graphics.Color.parseColor("#5B9BF5"))
-                    textSize = 14f
-                    typeface = android.graphics.Typeface.DEFAULT_BOLD
-                    val p = (10 * dp).toInt()
-                    setPadding(p, p, 0, p)
-                    isClickable = true; isFocusable = true
-                }
-                btnRow.addView(laterTv)
-                btnRow.addView(joinTv)
-                root.addView(titleTv)
-                root.addView(dividerV)
-                root.addView(msgTv)
-                root.addView(btnRow)
-
-                val dialog = android.app.AlertDialog.Builder(ctx)
-                    .setView(root)
-                    .setCancelable(true)
-                    .create()
-
-                // Transparent window so rounded card corners show
-                dialog.window?.setBackgroundDrawable(
-                    android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT)
-                )
-
-                laterTv.setOnClickListener { dialog.dismiss() }
-                joinTv.setOnClickListener {
-                    dialog.dismiss()
-                    try {
-                        val i = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://t.me/cncverse"))
-                        i.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                        ctx.startActivity(i)
-                    } catch (_: Exception) {}
-                }
-                dialog.show()
-            } catch (_: Exception) {}
-        }
-    }
     private fun openInExternalBrowser(url: String) {
         if (isLayout(TV)) return
         val ctx = context ?: return
