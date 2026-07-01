@@ -796,22 +796,6 @@ override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageR
         }
     }
 
-    private fun openInExternalBrowser(url: String) {
-        if (isLayout(TV)) return
-        val ctx = context ?: return
-        val now = System.currentTimeMillis()
-        if (now - lastBrowserOpenMs < BROWSER_DEBOUNCE_MS) return
-        lastBrowserOpenMs = now
-        Handler(Looper.getMainLooper()).post {
-            try {
-                ctx.startActivity(
-                    Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-                )
-            } catch (e: Exception) { }
-        }
-    }
 }
 
 fun getHighestQuality(input: String): Int? {
