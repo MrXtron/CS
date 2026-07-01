@@ -56,7 +56,7 @@ fun getIndexQuality(str: String?): Int {
 
 suspend fun getLatestBaseUrl(baseUrl: String, source: String): String {
     return try {
-        val dynamicUrls = app.get("https://raw.githubusercontent.com/SaurabhKaperwan/Utils/refs/heads/main/urls.json")
+        val dynamicUrls = app.get("https://raw.githubusercontent.com/MrXtron/CSF/refs/heads/main/domains.json")
             .parsedSafe<Map<String, String>>()
         dynamicUrls?.get(source)?.takeIf { it.isNotBlank() } ?: baseUrl
     } catch (e: Exception) {
@@ -68,6 +68,16 @@ open class VCloud : ExtractorApi() {
     override val name: String = "V-Cloud"
     override val mainUrl: String = "https://vcloud.*"
     override val requiresReferer = false
+
+    fun extractPxlUrl(html: String): String? {
+        val regex = Regex("""var\s+pxl\s*=\s*["']([^"']+)["']""")
+        return regex.find(html)?.groupValues?.get(1)
+    }
+
+    fun extractDoubleAtob(html: String): String? {
+        val regex = Regex("""var\s+url\s*=\s*atob\s*\(\s*atob\s*\(\s*['"]([^'"]+)['"]\s*\)\s*\)""")
+        return regex.find(html)?.groupValues?.get(1)?.let { base64Decode(base64Decode(it)) }
+    }
 
     override suspend fun getUrl(
         url: String,
@@ -97,7 +107,12 @@ open class VCloud : ExtractorApi() {
         }
         else {
             val scriptTag = doc.selectFirst("script:containsData(url)")?.toString() ?: ""
-            Regex("var url = '([^']*)'").find(scriptTag) ?. groupValues ?. get(1) ?: ""
+
+            if(newUrl.contains("vcloud")) {
+                extractDoubleAtob(scriptTag) ?: ""
+            } else {
+                Regex("var url = '([^']*)'").find(scriptTag) ?. groupValues ?. get(1) ?: ""
+            }
         }
 
         if(!link.startsWith("https://")) link = baseUrl + link
@@ -134,9 +149,10 @@ open class VCloud : ExtractorApi() {
                 if(dlink != "") myCallback( baseUrl + dlink, "[BuzzServer]")
             }
             else if (link.contains("pixeldra")) {
-                val baseUrlLink = getBaseUrl(link)
-                val finalURL = if (link.contains("download", true)) link
-                else "$baseUrlLink/api/file/${link.substringAfterLast("/")}?download"
+                val pixelLink = extractPxlUrl(document.toString()) ?: return@amap
+                val baseUrlLink = getBaseUrl(pixelLink)
+                val finalURL = if (pixelLink.contains("download", true)) pixelLink
+                else "$baseUrlLink/api/file/${pixelLink.substringAfterLast("/")}?download"
                 myCallback(finalURL, "[Pixeldrain]")
             }
             else if (text.contains("Server : 10Gbps")) {
@@ -144,6 +160,7 @@ open class VCloud : ExtractorApi() {
                 if(redirectUrl.contains("link=")) redirectUrl = redirectUrl.substringAfter("link=")
                 myCallback(redirectUrl, "[Download]")
             }
+            else if (text.contains("Gofile")) loadExtractor(link, "", subtitleCallback, callback)
             else { Log.d("Error", "No Server matched") }
         }
     }
