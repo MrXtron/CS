@@ -152,7 +152,7 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/src
           chmod +x gradlew
-          ./gradlew clean :PRMovies:make makePluginsJson --no-build-cache --refresh-dependencies
+          ./gradlew clean make makePluginsJson --no-build-cache --refresh-dependencies
           ./gradlew ensureJarCompatibility
           cp **/build/*.cs3 $GITHUB_WORKSPACE/builds
           cp **/build/*.jar $GITHUB_WORKSPACE/builds
