@@ -64,11 +64,11 @@ subprojects {
 
     cloudstream {
         setRepo(System.getenv("GITHUB_REPOSITORY") ?: "https://github.com/MrXtron/CS")
-        authors = listOf("Phisher98")
+        authors = listOf("MrXtron")
     }
 
     android {
-        namespace = "com.phisher98"
+        namespace = "com.mrxtron"
         compileSdk = 36
 
         defaultConfig {
