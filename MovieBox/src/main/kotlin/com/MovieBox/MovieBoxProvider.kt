@@ -1096,12 +1096,12 @@ suspend fun fetchTmdbLogoUrl(
             val videoUrl = response.get("data")?.get("url")?.asText()
             if (!videoUrl.isNullOrBlank()) {
                 callback.invoke(
-                    ExtractorLink(
+                    newExtractorLink(
                         source = this.name,
                         name = "MovieBox VIP Stream",
                         url = videoUrl,
                         referer = mainUrl,
-                        quality = Qualities.HD.value,
+                        quality = Qualities.P1080.value,
                         isM3u8 = videoUrl.contains(".m3u8")
                     )
                 )
@@ -1114,6 +1114,4 @@ suspend fun fetchTmdbLogoUrl(
             false
         }
     }
-
-
 }
