@@ -72,12 +72,12 @@ class MovieBoxProvider : MainAPI() {
 
     private fun reverseString(input: String): String = input.reversed()
 
-    private fun generateXClientToken(hardcodedTimestamp: Long? = null): String {
-        val timestamp = (hardcodedTimestamp ?: System.currentTimeMillis()).toString()
-        val reversed = reverseString(timestamp)
-        val hash = md5(reversed.toByteArray())
-        return "$timestamp,$hash"
-    }
+    private fun generateXClientToken(fixedTimestamp: Long): String {
+    val timestamp = fixedTimestamp.toString()
+    val reversed = timestamp.reversed()
+    val hash = md5(reversed.toByteArray())
+    return "$timestamp,$hash"
+}
 
     private val random = SecureRandom()
 
@@ -1048,6 +1048,72 @@ suspend fun fetchTmdbLogoUrl(
 
     // No language match & no voted logos
     return null
+
+        override suspend fun loadLinks(
+        data: String,
+        isCasting: Boolean,
+        subtitleCallback: (SubtitleFile) -> Unit,
+        callback: (ExtractorLink) -> Unit
+    ): Boolean {
+        val playUrl = "$mainUrl/movie-mobile-bff/v2/play-info"
+        val jsonBody = "{\"id\":\"$data\"}"
+        val fixedTime = System.currentTimeMillis()
+
+        val timestampStr = fixedTime.toString()
+        val reversed = timestampStr.reversed()
+        val hash = md5(reversed.toByteArray())
+        val xClientToken = "$timestampStr,$hash"
+
+        val xTrSignature = generateXTrSignature(
+            method = "POST",
+            accept = "application/json",
+            contentType = "application/json",
+            url = playUrl,
+            body = jsonBody,
+            useAltKey = true,
+            hardcodedTimestamp = fixedTime
+        )
+
+        val headers = mapOf(
+            "user-agent" to "com.community.mbox.in/50020042 (Linux; U; Android 16; en_IN; sdk_gphone64_x86_64; Build/BP22.250325.006; Cronet/133.0.6876.3)",
+            "accept" to "application/json",
+            "content-type" to "application/json",
+            "connection" to "keep-alive",
+            "x-client-token" to xClientToken,
+            "x-tr-signature" to xTrSignature,
+            "x-client-info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.03.0529.03","version_code":50020042,"os":"android","os_version":"16","device_id":"$deviceId","install_store":"ps","gaid":"d7578036d13336cc","brand":"google","model":"${randomBrandModel()}","system_language":"en","net":"NETWORK_WIFI","region":"IN","timezone":"Asia/Calcutta","sp_code":""}""",
+            "x-client-status" to "0",
+            "x-play-mode" to "2"
+        )
+
+        return try {
+            val response = app.post(
+                playUrl,
+                headers = headers,
+                requestBody = jsonBody.toRequestBody("application/json".toMediaType())
+            ).parsed<JsonNode>()
+
+            val videoUrl = response.get("data")?.get("url")?.asText()
+            if (!videoUrl.isNullOrBlank()) {
+                callback.invoke(
+                    ExtractorLink(
+                        source = this.name,
+                        name = "MovieBox VIP Stream",
+                        url = videoUrl,
+                        referer = mainUrl,
+                        quality = Qualities.HD.value,
+                        isM3u8 = videoUrl.contains(".m3u8")
+                    )
+                )
+                true
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
 
 
 }
