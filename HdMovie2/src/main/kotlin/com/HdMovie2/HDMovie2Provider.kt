@@ -26,18 +26,18 @@ class HDMovie2Provider : MainAPI() {
     )
 
     override val mainPage = mainPageOf(
-        "/release/${Calendar.getInstance().get(Calendar.YEAR)}" to "Latest",
-        "/genre/bollywood" to "BollyWood",
-        "/genre/hindi-dubbed" to "Hindi Dubbed",
-        "/genre/hindi-webseries" to "Hindi Web Series",
-        "/genre/adventure" to "Adventure",
-        "/genre/comedy" to "Comedy",
-        "/genre/crime" to "Crime",
-        "/genre/drama" to "Drama",
-        "/genre/family" to "Family",
-        "/genre/horror" to "Horror",
-        "/genre/science-fiction" to "Science Fiction",
-        "/genre/thriller" to "Thriller"
+        "release/${Calendar.getInstance().get(Calendar.YEAR)}" to "Latest",
+        "genre/bollywood" to "BollyWood",
+        "genre/hindi-dubbed" to "Hindi Dubbed",
+        "genre/hindi-webseries" to "Hindi Web Series",
+        "genre/adventure" to "Adventure",
+        "genre/comedy" to "Comedy",
+        "genre/crime" to "Crime",
+        "genre/drama" to "Drama",
+        "genre/family" to "Family",
+        "genre/horror" to "Horror",
+        "genre/science-fiction" to "Science Fiction",
+        "genre/thriller" to "Thriller"
     )
 
     private suspend fun fixUrl() {
