@@ -71,13 +71,13 @@ class MovieBoxProvider : MainAPI() {
     }
 
     private fun reverseString(input: String): String = input.reversed()
+    private fun generateXClientToken(hardcodedTimestamp: Long? = null): String {
+        val timestamp = (hardcodedTimestamp ?: System.currentTimeMillis()).toString()
+        val reversed = reverseString(timestamp)
+        val hash = md5(reversed.toByteArray())
+        return "$timestamp,$hash"
+    }
 
-    private fun generateXClientToken(fixedTimestamp: Long): String {
-    val timestamp = fixedTimestamp.toString()
-    val reversed = timestamp.reversed()
-    val hash = md5(reversed.toByteArray())
-    return "$timestamp,$hash"
-}
 
     private val random = SecureRandom()
 
