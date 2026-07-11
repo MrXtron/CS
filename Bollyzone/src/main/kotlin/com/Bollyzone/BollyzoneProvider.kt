@@ -127,7 +127,8 @@ class BollyzoneProvider : MainAPI() {
                 val titleText = element.selectFirst("a h2")?.text()?.trim()
                 val match = titleText?.let { dateRegex.find(it) }
                 val epName = match?.value ?: titleText ?: "Episode"
-                val epPosterRaw = element.select("img").getImageAttr()
+                val imgElement = element.selectFirst("img")
+                val epPosterRaw = imgElement?.getImageAttr() ?: ""
                 val epPoster = if (epPosterRaw.isNotBlank()) fixUrl(epPosterRaw) else ""
 
                 newEpisode(epUrl) {
