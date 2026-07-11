@@ -82,10 +82,11 @@ class BollyzoneProvider : MainAPI() {
         val href = fixUrlNull(selectFirst("a")?.attr("href")) ?: return null
         val img = selectFirst("img")
 
-        val posterUrl = fixUrlNull(img?.getImageAttr())
+        val rawPosterUrl = img?.getImageAttr()
+        val posterUrl = if (rawPosterUrl.isNullOrBlank()) null else fixUrl(rawPosterUrl)
 
         return newTvSeriesSearchResponse(title, href) {
-            this.posterUrl = posterUrl
+            this.posterUrl = posterUrl?.let { "$proxy?url=$it" } ?: posterUrl
         }
     }
 
@@ -106,7 +107,8 @@ class BollyzoneProvider : MainAPI() {
 
         // Handle TV series
         val title = doc.select("meta[property=og:title]").attr("content")
-        val posterUrl = "$proxy?url=" + doc.selectFirst("div.Image img")?.getImageAttr()
+        val mainPosterRaw = doc.selectFirst("div.Image img")?.getImageAttr() ?: ""
+        val posterUrl = if (mainPosterRaw.isNotBlank()) "$proxy?url=${fixUrl(mainPosterRaw)}" else ""
         val description = doc.select("meta[property=og:description]").attr("content")
         val tags = doc.select(".Genre a").map { it.text() }.distinct()
 
@@ -125,11 +127,12 @@ class BollyzoneProvider : MainAPI() {
                 val titleText = element.selectFirst("a h2")?.text()?.trim()
                 val match = titleText?.let { dateRegex.find(it) }
                 val epName = match?.value ?: titleText ?: "Episode"
-                val epPoster = element.select("img").attr("src")
+                val epPosterRaw = element.select("img").getImageAttr()
+                val epPoster = if (epPosterRaw.isNotBlank()) fixUrl(epPosterRaw) else ""
 
                 newEpisode(epUrl) {
                     name = epName
-                    this.posterUrl = "$proxy?url=$epPoster"
+                    this.posterUrl = if (epPoster.isNotBlank()) "$proxy?url=$epPoster" else null
                 }
             }
         }.toMutableList()
@@ -194,12 +197,12 @@ class BollyzoneProvider : MainAPI() {
 
         return true
     }
-
     private fun Element.getImageAttr(): String {
         return when {
             this.hasAttr("data-src") -> this.attr("data-src")
+            this.hasAttr("data-lazy-src") -> this.attr("data-lazy-src")
             this.hasAttr("src") -> this.attr("src")
-            else -> this.attr("src")
+            else -> ""
         }
     }
 }
