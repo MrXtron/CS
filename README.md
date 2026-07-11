@@ -1,13 +1,4 @@
-## 🌐 Hindi Plugins inspired by:
-
-### 🔹 Phisher (phisherrepo Cloudstream Plugin)
-https://github.com/phisher98/cloudstream-extensions-phisher
-
-### 🔸 Nivin (CNC Cloudstream Plugin)
-https://github.com/NivinCNC/CNCVerse-Cloud-Stream-Extension
-
-### 🔹 Saurabh Kaperwan (CSX Cloudstream Plugin)
-https://github.com/SaurabhKaperwan/CSX
+## 🌐 CloudStream Hindi Plugins
 
 ---
 
@@ -18,18 +9,6 @@ https://github.com/SaurabhKaperwan/CSX
     <img src="https://skillicons.dev/icons?i=kotlin,androidstudio,gradle,github,githubactions&theme=light&perline=5" />
   </a>
 </p>
-
----
-
-## 🔄 Ultima Sync Setup
-
-Want to sync your devices using **Ultima’s Cross Device Watch Sync**?
-
-📘 [View the full setup guide →](docs/ULTIMA_SYNC_SETUP.md)
-
-📘 [View YouTube guide →](https://cloudstream.miraheze.org/wiki/Ultima)
-
-This guide will show you how to use a **private GitHub project** and a **personal access token** to sync playback history across devices.
 
 ---
 
@@ -53,4 +32,6 @@ We hereby issue this notice to clarify that these extensions function similarly 
 
 If you believe content is violating copyright laws, please contact the **actual file hosts**, **not** the developers of this repository or the Cloudstream 3 app.
 
+---
+Thank You.
 ---

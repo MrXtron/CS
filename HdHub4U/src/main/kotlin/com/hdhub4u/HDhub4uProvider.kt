@@ -55,7 +55,7 @@ class HDhub4uProvider : MainAPI() {
     {
         const val TMDBAPIKEY = "1865f43a0549ca50d341dd9ab8b29f49"
         const val TMDBBASE = "https://image.tmdb.org/t/p/original"
-        const val TMDBAPI = "https://wild-surf-4a0d.phisher1.workers.dev"
+        const val TMDBAPI = "https://api.themoviedb.org/3"
         const val TAG = "EpisodeParser"
     }
 
