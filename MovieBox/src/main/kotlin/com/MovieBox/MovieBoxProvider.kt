@@ -55,6 +55,7 @@ import android.os.Handler
 import android.os.Looper
 import com.lagradost.cloudstream3.ui.settings.Globals.TV
 import com.lagradost.cloudstream3.ui.settings.Globals.isLayout
+
 class MovieBoxProvider : MainAPI() {
     override var mainUrl = "https://api3.aoneroom.com"
     override var name = "MovieBox"
@@ -65,7 +66,7 @@ class MovieBoxProvider : MainAPI() {
     private val secretKeyDefault = base64Decode("NzZpUmwwN3MweFNOOWpxbUVXQXQ3OUVCSlp1bElRSXNWNjRGWnIyTw==")
     private val secretKeyAlt = base64Decode("WHFuMm5uTzQxL0w5Mm8xaXVYaFNMSFRiWHZZNFo1Wlo2Mm04bVNMQQ==")
 
-        private fun md5(input: ByteArray): String {
+    private fun md5(input: ByteArray): String {
         return MessageDigest.getInstance("MD5").digest(input)
             .joinToString("") { "%02x".format(it) }
     }
@@ -77,7 +78,6 @@ class MovieBoxProvider : MainAPI() {
         val hash = md5(reversed.toByteArray())
         return "$timestamp,$hash"
     }
-
 
     private val random = SecureRandom()
 
@@ -104,6 +104,7 @@ class MovieBoxProvider : MainAPI() {
         val model = brandModels[brand]!!.random()
         return BrandModel(brand, model)
     }
+    
     @SuppressLint("UseKtx")
     private fun buildCanonicalString(
         method: String,
@@ -164,88 +165,87 @@ class MovieBoxProvider : MainAPI() {
 
         return "$timestamp|2|$signatureB64"
     }
-override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-    
-    val url = "$mainUrl/wefeed-mobile-bff/tab-operating?page=1&tabId=0&version="
 
-    // Generate required security headers.
-    val xClientToken = generateXClientToken()
-    val xTrSignature = generateXTrSignature("GET", "application/json", "application/json", url)
+    override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
+        val url = "$mainUrl/wefeed-mobile-bff/tab-operating?page=1&tabId=0&version="
 
-    val headers = mapOf(
-        "user-agent" to "com.community.mbox.in/50020042 (Linux; U; Android 16; en_IN; sdk_gphone64_x86_64; Build/BP22.250325.006; Cronet/133.0.6876.3)",
-        "accept" to "application/json",
-        "content-type" to "application/json",
-        "connection" to "keep-alive",
-        "x-client-token" to xClientToken,
-        "x-tr-signature" to xTrSignature,
-        "x-client-info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.03.0529.03","version_code":50020042,"os":"android","os_version":"16","device_id":"$deviceId","install_store":"ps","gaid":"d7578036d13336cc","brand":"google","model":"${randomBrandModel()}","system_language":"en","net":"NETWORK_WIFI","region":"IN","timezone":"Asia/Calcutta","sp_code":""}""",
-        "x-client-status" to "0",
-        "x-play-mode" to "2" // Optional, if needed for specific API behavior
-    )
+        // Generate required security headers.
+        val xClientToken = generateXClientToken()
+        val xTrSignature = generateXTrSignature("GET", "application/json", "application/json", url)
 
-    val response = app.get(url, headers = headers)
-    val responseBody = response.body?.string() ?: ""
+        val headers = mapOf(
+            "user-agent" to "com.community.mbox.in/50020042 (Linux; U; Android 16; en_IN; sdk_gphone64_x86_64; Build/BP22.250325.006; Cronet/133.0.6876.3)",
+            "accept" to "application/json",
+            "content-type" to "application/json",
+            "connection" to "keep-alive",
+            "x-client-token" to xClientToken,
+            "x-tr-signature" to xTrSignature,
+            "x-client-info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.03.0529.03","version_code":50020042,"os":"android","os_version":"16","device_id":"$deviceId","install_sto"""",
+            "x-client-status" to "0",
+            "x-play-mode" to "2" // Optional, if needed for specific API behavior
+        )
 
-    // Helper function to parse a 'subject' JSON object into your app's data model.
-    fun parseSubject(subjectJson: JsonNode?): SearchResponse? {
-        subjectJson ?: return null // Return null if the subject object is missing
-        val subjectId = subjectJson["subjectId"]?.asText() ?: return null
-        val title = subjectJson["title"]?.asText() ?: return null
-        val coverUrl = subjectJson["cover"]?.get("url")?.asText()
-        val subjectType = when (subjectJson["subjectType"]?.asInt()) {
-            1 -> TvType.Movie
-            2 -> TvType.TvSeries
-            else -> TvType.Movie // Default to Movie
-        }
-        return newMovieSearchResponse(title, subjectId, subjectType) {
-            this.posterUrl = coverUrl
-            this.score = Score.from10(subjectJson["imdbRatingValue"]?.asText())
-        }
-    }
+        val response = app.get(url, headers = headers)
+        val responseBody = response.body?.string() ?: ""
 
-    // Use Jackson to parse the new, multi-section API response structure.
-    val homePageLists = try {
-        val mapper = jacksonObjectMapper()
-        val root = mapper.readTree(responseBody)
-        val sections = root["data"]?.get("items") ?: return newHomePageResponse(emptyList())
-
-        // Iterate through each section (e.g., Banners, Trending Now, etc.)
-        sections.mapNotNull { section ->
-            val title = section["title"]?.asText()?.let {
-                if (it.equals("banner", ignoreCase = true)) "🔥Top Picks" else it
-            } ?: return@mapNotNull null
-            val type = section["type"]?.asText()
-
-            // Extract the list of media items based on the section type.
-            val mediaList = when (type) {
-                "BANNER" -> section["banner"]?.get("banners")
-                    ?.mapNotNull { bannerItem -> parseSubject(bannerItem["subject"]) }
-                "SUBJECTS_MOVIE" -> section["subjects"]
-                    ?.mapNotNull { subjectItem -> parseSubject(subjectItem) }
-                "CUSTOM" -> section["customData"]?.get("items")
-                    ?.mapNotNull { customItem -> parseSubject(customItem["subject"]) }
-                else -> null
+        // Helper function to parse a 'subject' JSON object into your app's data model.
+        fun parseSubject(subjectJson: JsonNode?): SearchResponse? {
+            subjectJson ?: return null // Return null if the subject object is missing
+            val subjectId = subjectJson["subjectId"]?.asText() ?: return null
+            val title = subjectJson["title"]?.asText() ?: return null
+            val coverUrl = subjectJson["cover"]?.get("url")?.asText()
+            val subjectType = when (subjectJson["subjectType"]?.asInt()) {
+                1 -> TvType.Movie
+                2 -> TvType.TvSeries
+                else -> TvType.Movie // Default to Movie
             }
-
-            // Only create a HomePageList if the section contains valid media items.
-            if (mediaList.isNullOrEmpty()) {
-                null
-            } else {
-                HomePageList(title, mediaList)
+            return newMovieSearchResponse(title, subjectId, subjectType) {
+                this.posterUrl = coverUrl
+                this.score = Score.from10(subjectJson["imdbRatingValue"]?.asText())
             }
         }
-    } catch (e: Exception) {
-        // In case of a parsing error, return an empty list.
-        e.printStackTrace()
-        emptyList()
+
+        // Use Jackson to parse the new, multi-section API response structure.
+        val homePageLists = try {
+            val mapper = jacksonObjectMapper()
+            val root = mapper.readTree(responseBody)
+            val sections = root["data"]?.get("items") ?: return newHomePageResponse(emptyList())
+
+            // Iterate through each section (e.g., Banners, Trending Now, etc.)
+            sections.mapNotNull { section ->
+                val title = section["title"]?.asText()?.let {
+                    if (it.equals("banner", ignoreCase = true)) "🔥Top Picks" else it
+                } ?: return@mapNotNull null
+                val type = section["type"]?.asText()
+
+                // Extract the list of media items based on the section type.
+                val mediaList = when (type) {
+                    "BANNER" -> section["banner"]?.get("banners")
+                        ?.mapNotNull { bannerItem -> parseSubject(bannerItem["subject"]) }
+                    "SUBJECTS_MOVIE" -> section["subjects"]
+                        ?.mapNotNull { subjectItem -> parseSubject(subjectItem) }
+                    "CUSTOM" -> section["customData"]?.get("items")
+                        ?.mapNotNull { customItem -> parseSubject(customItem["subject"]) }
+                    else -> null
+                }
+
+                // Only create a HomePageList if the section contains valid media items.
+                if (mediaList.isNullOrEmpty()) {
+                    null
+                } else {
+                    HomePageList(title, mediaList)
+                }
+            }
+        } catch (e: Exception) {
+            // In case of a parsing error, return an empty list.
+            e.printStackTrace()
+            emptyList()
+        }
+
+        return newHomePageResponse(homePageLists)
     }
 
-    return newHomePageResponse(homePageLists)
-}
-
-    override suspend fun search(query: String,page: Int): SearchResponseList {
-        
+    override suspend fun search(query: String, page: Int): SearchResponseList {
         val url = "$mainUrl/wefeed-mobile-bff/subject-api/search/v2"
         val jsonBody = """{"page": $page, "perPage": 20, "keyword": "$query"}"""
         val xClientToken = generateXClientToken()
@@ -257,7 +257,7 @@ override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageR
             "connection" to "keep-alive",
             "x-client-token" to xClientToken,
             "x-tr-signature" to xTrSignature,
-            "x-client-info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.03.0529.03","version_code":50020042,"os":"android","os_version":"16","device_id":"$deviceId","install_store":"ps","gaid":"d7578036d13336cc","brand":"google","model":"${randomBrandModel()}","system_language":"en","net":"NETWORK_WIFI","region":"IN","timezone":"Asia/Calcutta","sp_code":""}""",
+            "x-client-info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.03.0529.03","version_code":50020042,"os":"android","os_version":"16","device_id":"$deviceId","install"""",
             "x-client-status" to "0"
         )
         val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
@@ -275,38 +275,35 @@ override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageR
         for (result in results) {
             val subjects = result["subjects"] ?: continue
             for (subject in subjects) {
-            val title = subject["title"]?.asText() ?: continue
-            val id = subject["subjectId"]?.asText() ?: continue
-            val coverImg = subject["cover"]?.get("url")?.asText()
-            val subjectType = subject["subjectType"]?.asInt() ?: 1
-            val type = when (subjectType) {
-                        1 -> TvType.Movie
-                        2 -> TvType.TvSeries
-                        else -> TvType.Movie
+                val title = subject["title"]?.asText() ?: continue
+                val id = subject["subjectId"]?.asText() ?: continue
+                val coverImg = subject["cover"]?.get("url")?.asText()
+                val subjectType = subject["subjectType"]?.asInt() ?: 1
+                val type = when (subjectType) {
+                    1 -> TvType.Movie
+                    2 -> TvType.TvSeries
+                    else -> TvType.Movie
                 }
-            searchList.add(
-                newMovieSearchResponse(
-                name = title,
-                url = id,
-                type = type
-                ) {
-                    this.posterUrl = coverImg
-                    this.score = Score.from10(subject["imdbRatingValue"]?.asText())
-                }
-            )
+                searchList.add(
+                    newMovieSearchResponse(
+                        name = title,
+                        url = id,
+                        type = type
+                    ) {
+                        this.posterUrl = coverImg
+                        this.score = Score.from10(subject["imdbRatingValue"]?.asText())
+                    }
+                )
             }
         }
         return searchList.toNewSearchResponseList()
     }
 
     override suspend fun load(url: String): LoadResponse {
-        
-
         val id = Regex("""subjectId=([^&]+)""")
             .find(url)
             ?.groupValues?.get(1)
             ?: url.substringAfterLast('/')
-
 
         val finalUrl = "$mainUrl/wefeed-mobile-bff/subject-api/get?subjectId=$id"
         val xClientToken = generateXClientToken()
@@ -319,7 +316,7 @@ override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageR
             "connection" to "keep-alive",
             "x-client-token" to xClientToken,
             "x-tr-signature" to xTrSignature,
-            "x-client-info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.03.0529.03","version_code":50020042,"os":"android","os_version":"16","device_id":"$deviceId","install_store":"ps","gaid":"d7578036d13336cc","brand":"google","model":"${randomBrandModel()}","system_language":"en","net":"NETWORK_WIFI","region":"IN","timezone":"Asia/Calcutta","sp_code":""}""",
+            "x-client-info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.03.0529.03","version_code":50020042,"os":"android","os_version":"16","device_id":"$deviceId","install"""",
             "x-client-status" to "0",
             "x-play-mode" to "2"
         )
@@ -362,7 +359,6 @@ override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageR
             }
             ?.distinctBy { it.actor.name }
             ?: emptyList()
-
 
         val tags = genre?.split(",")?.map { it.trim() } ?: emptyList()
 
@@ -504,7 +500,7 @@ override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageR
             return newTvSeriesLoadResponse(title, finalUrl, type, episodes) {
                 this.posterUrl = coverUrl ?: Poster
                 this.backgroundPosterUrl = Background ?: backgroundUrl ?: Poster
-                try { this.logoUrl = logoUrl } catch(_: Throwable) {}
+                try { this.logoUrl = logoUrl } catch (_: Throwable) {}
                 this.plot = Description ?: description
                 this.year = year
                 this.tags = tags
@@ -519,12 +515,12 @@ override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageR
         return newMovieLoadResponse(title, finalUrl, type, id) {
             this.posterUrl = coverUrl ?: Poster
             this.backgroundPosterUrl = Background ?: backgroundUrl
-            try { this.logoUrl = logoUrl } catch(_:Throwable){}
+            try { this.logoUrl = logoUrl } catch (_: Throwable) {}
             this.plot = Description ?: description
             this.year = year
             this.tags = tags
             this.actors = actors
-            this.score = Score.from10(IMDBRating) ?:imdbRating?.let { Score.from10(it) }
+            this.score = Score.from10(IMDBRating) ?: imdbRating?.let { Score.from10(it) }
             this.duration = durationMinutes
             addImdbId(imdbId)
             addTMDbId(tmdbId.toString())
@@ -532,28 +528,28 @@ override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageR
     }
 
     override suspend fun loadLinks(
-    data: String,
-    isCasting: Boolean,
-    subtitleCallback: (SubtitleFile) -> Unit,
-    callback: (ExtractorLink) -> Unit
-): Boolean {
-    // External browser popup removed from here
-    val (brand, model) = randomBrandModel()
+        data: String,
+        isCasting: Boolean,
+        subtitleCallback: (SubtitleFile) -> Unit,
+        callback: (ExtractorLink) -> Unit
+    ): Boolean {
+        // External browser popup removed from here
+        val (brand, model) = randomBrandModel()
 
-    try {
-        val parts = data.split("|")
-        val originalSubjectId = when {
-            parts[0].contains("get?subjectId") -> {
-                Regex("""subjectId=([^&]+)""")
-                    .find(parts[0])
-                    ?.groupValues?.get(1)
-                    ?: parts[0].substringAfterLast('/')
+        try {
+            val parts = data.split("|")
+            val originalSubjectId = when {
+                parts[0].contains("get?subjectId") -> {
+                    Regex("""subjectId=([^&]+)""")
+                        .find(parts[0])
+                        ?.groupValues?.get(1)
+                        ?: parts[0].substringAfterLast('/')
+                }
+                parts[0].contains("/") -> {
+                    parts[0].substringAfterLast('/')
+                }
+                else -> parts[0]
             }
-            parts[0].contains("/") -> {
-                parts[0].substringAfterLast('/')
-            }
-            else -> parts[0]
-        }
 
             val season = if (parts.size > 1) parts[1].toIntOrNull() ?: 0 else 0
             val episode = if (parts.size > 2) parts[2].toIntOrNull() ?: 0 else 0
@@ -567,7 +563,7 @@ override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageR
                 "connection" to "keep-alive",
                 "x-client-token" to subjectXClientToken,
                 "x-tr-signature" to subjectXTrSignature,
-                "x-client-info" to """{"package_name":"com.community.oneroom","version_name":"3.0.13.0325.03","version_code":50020088,"os":"android","os_version":"13","install_ch":"ps","device_id":"$deviceId","install_store":"ps","gaid":"1b2212c1-dadf-43c3-a0c8-bd6ce48ae22d","brand":"$model","model":"$brand","system_language":"en","net":"NETWORK_WIFI","region":"US","timezone":"Asia/Calcutta","sp_code":"","X-Play-Mode":"1","X-Idle-Data":"1","X-Family-Mode":"0","X-Content-Mode":"0"}""".trimIndent(),
+                "x-client-info" to """{"package_name":"com.community.oneroom","version_name":"3.0.13.0325.03","version_code":50020088,"os":"android","os_version":"13","install_ch":"ps","device_id"""",
                 "x-client-status" to "0"
             )
 
@@ -607,8 +603,6 @@ override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageR
             // Always add the original subject ID first as the default source with proper language name
             subjectIds.add(0, Pair(originalSubjectId, originalLanguageName))
 
-            //var hasAnyLinks = false
-
             // Process each subjectId (including dubs)
             for ((subjectId, language) in subjectIds) {
                 try {
@@ -624,7 +618,7 @@ override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageR
                         "connection" to "keep-alive",
                         "x-client-token" to xClientToken,
                         "x-tr-signature" to xTrSignature,
-                        "x-client-info" to """{"package_name":"com.community.oneroom","version_name":"3.0.13.0325.03","version_code":50020088,"os":"android","os_version":"13","install_ch":"ps","device_id":"$deviceId","install_store":"ps","gaid":"1b2212c1-dadf-43c3-a0c8-bd6ce48ae22d","brand":"$model","model":"$brand","system_language":"en","net":"NETWORK_WIFI","region":"US","timezone":"Asia/Calcutta","sp_code":"","X-Play-Mode":"1","X-Idle-Data":"1","X-Family-Mode":"0","X-Content-Mode":"0"}""".trimIndent(),
+                        "x-client-info" to """{"package_name":"com.community.oneroom","version_name":"3.0.13.0325.03","version_code":50020088,"os":"android","os_version":"13","install_ch":"ps","d"""",
                         "x-client-status" to "0"
                     )
 
@@ -648,8 +642,8 @@ override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageR
                                 val quality = getHighestQuality(resolutions)
                                 callback.invoke(
                                     newExtractorLink(
-                                        source = "$name ${language.replace("dub","Audio")}",
-                                        name = "$name (${language.replace("dub","Audio")})",
+                                        source = "$name ${language.replace("dub", "Audio")}",
+                                        name = "$name (${language.replace("dub", "Audio")})",
                                         url = streamUrl,
                                         type = when {
                                             streamUrl.startsWith("magnet:", ignoreCase = true) -> ExtractorLinkType.MAGNET
@@ -676,7 +670,7 @@ override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageR
                                     "Authorization" to "Bearer $token",
                                     "user-agent" to "com.community.oneroom/50020088 (Linux; U; Android 13; en_US; $brand; Build/TQ3A.230901.001; Cronet/145.0.7582.0)",
                                     "Accept" to "",
-                                    "x-client-info" to """{"package_name":"com.community.oneroom","version_name":"3.0.13.0325.03","version_code":50020088,"os":"android","os_version":"13","install_ch":"ps","device_id":"$deviceId","install_store":"ps","gaid":"1b2212c1-dadf-43c3-a0c8-bd6ce48ae22d","brand":"$model","model":"$brand","system_language":"en","net":"NETWORK_WIFI","region":"US","timezone":"Asia/Calcutta","sp_code":"","X-Play-Mode":"1","X-Idle-Data":"1","X-Family-Mode":"0","X-Content-Mode":"0"}""".trimIndent(),
+                                    "x-client-info" to """{"package_name":"com.community.oneroom","version_name":"3.0.13.0325.03","version_code":50020088,"os":"android","os_version":"13","install"""",
                                     "X-Client-Status" to "0",
                                     "Content-Type" to "",
                                     "X-Client-Token" to xClientToken,
@@ -695,7 +689,7 @@ override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageR
                                         subtitleCallback.invoke(
                                             newSubtitleFile(
                                                 url = captionUrl,
-                                                lang = "$lang (${language.replace("dub","Audio")})"
+                                                lang = "$lang (${language.replace("dub", "Audio")})"
                                             )
                                         )
                                     }
@@ -708,7 +702,7 @@ override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageR
                                     "Authorization" to "Bearer $token",
                                     "User-Agent" to "com.community.mbox.in/50020042 (Linux; U; Android 16; en_IN; $brand; Build/BP22.250325.006; Cronet/133.0.6876.3)",
                                     "Accept" to "",
-                                    "X-Client-Info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.03.0529.03","version_code":50020042,"os":"android","os_version":"16","device_id":"$deviceId","install_store":"ps","gaid":"d7578036d13336cc","brand":"google","model":"$brand","system_language":"en","net":"NETWORK_WIFI","region":"IN","timezone":"Asia/Calcutta","sp_code":""}""",
+                                    "X-Client-Info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.03.0529.03","version_code":50020042,"os":"android","os_version":"16","device_"""",
                                     "X-Client-Status" to "0",
                                     "Content-Type" to "",
                                     "X-Client-Token" to xClientToken1,
@@ -728,15 +722,13 @@ override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageR
                                         subtitleCallback.invoke(
                                             newSubtitleFile(
                                                 url = captionUrl,
-                                                lang = "$lang (${language.replace("dub","Audio")})"
+                                                lang = "$lang (${language.replace("dub", "Audio")})"
                                             )
                                         )
                                     }
                                 }
-                                //hasAnyLinks = true
                             }
                         }
-
 
                         //Ep Miss Match Fix (SplitsVilla used to test)
                         if (streams == null || !streams.isArray || streams.size() == 0) {
@@ -770,8 +762,8 @@ override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageR
 
                                         callback.invoke(
                                             newExtractorLink(
-                                                source = "$name ${language.replace("dub","Audio")}",
-                                                name = "$name S${se}E${ep} ${quality}p (${language.replace("dub","Audio")})",
+                                                source = "$name ${language.replace("dub", "Audio")}",
+                                                name = "$name S${se}E${ep} ${quality}p (${language.replace("dub", "Audio")})",
                                                 url = link,
                                                 type = ExtractorLinkType.VIDEO
                                             ) {
@@ -788,14 +780,13 @@ override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageR
                     continue
                 }
             }
-            
+
             return true
-              
+
         } catch (_: Exception) {
             return false
         }
     }
-
 }
 
 fun getHighestQuality(input: String): Int? {
@@ -817,13 +808,13 @@ fun getHighestQuality(input: String): Int? {
     return null
 }
 
-
 private fun cleanTitle(s: String): String {
     return s.lowercase()
         .replace("[^a-z0-9 ]".toRegex(), " ")
         .replace("\\s+".toRegex(), " ")
         .trim()
 }
+
 private suspend fun identifyID(
     title: String,
     year: Int?,
@@ -912,7 +903,6 @@ private suspend fun searchAndPick(
             }
             score += titleScore
 
-
             if (candYear != null && year != null && candYear == year) score += 35.0
 
             if (imdbRatingValue != null && !candRating.isNaN()) {
@@ -998,120 +988,28 @@ suspend fun fetchTmdbLogoUrl(
     val lang = appLangCode?.trim()?.lowercase()
 
     fun path(o: JSONObject) = o.optString("file_path")
-    fun isSvg(o: JSONObject) = path(o).endsWith(".svg", true)
-    fun urlOf(o: JSONObject) = "https://image.tmdb.org/t/p/w500${path(o)}"
 
-    // Language match
-    var svgFallback: JSONObject? = null
-
-    for (i in 0 until logos.length()) {
-        val logo = logos.optJSONObject(i) ?: continue
-        val p = path(logo)
-        if (p.isBlank()) continue
-
-        val l = logo.optString("iso_639_1").trim().lowercase()
-        if (l == lang) {
-            if (!isSvg(logo)) return urlOf(logo)
-            if (svgFallback == null) svgFallback = logo
-        }
-    }
-    svgFallback?.let { return urlOf(it) }
-
-    // Highest voted fallback
-    var best: JSONObject? = null
-    var bestSvg: JSONObject? = null
-
-    fun voted(o: JSONObject) = o.optDouble("vote_average", 0.0) > 0 && o.optInt("vote_count", 0) > 0
-
-    fun better(a: JSONObject?, b: JSONObject): Boolean {
-        if (a == null) return true
-        val aAvg = a.optDouble("vote_average", 0.0)
-        val aCnt = a.optInt("vote_count", 0)
-        val bAvg = b.optDouble("vote_average", 0.0)
-        val bCnt = b.optInt("vote_count", 0)
-        return bAvg > aAvg || (bAvg == aAvg && bCnt > aCnt)
-    }
-
-    for (i in 0 until logos.length()) {
-        val logo = logos.optJSONObject(i) ?: continue
-        if (!voted(logo)) continue
-
-        if (isSvg(logo)) {
-            if (better(bestSvg, logo)) bestSvg = logo
-        } else {
-            if (better(best, logo)) best = logo
-        }
-    }
-
-    best?.let { return urlOf(it) }
-    bestSvg?.let { return urlOf(it) }
-
-    // No language match & no voted logos
-    return null
-
-        override suspend fun loadLinks(
-        data: String,
-        isCasting: Boolean,
-        subtitleCallback: (SubtitleFile) -> Unit,
-        callback: (ExtractorLink) -> Unit
-    ): Boolean {
-        val playUrl = "$mainUrl/movie-mobile-bff/v2/play-info"
-        val jsonBody = "{\"id\":\"$data\"}"
-        val fixedTime = System.currentTimeMillis()
-
-        val timestampStr = fixedTime.toString()
-        val reversed = timestampStr.reversed()
-        val hash = md5(reversed.toByteArray())
-        val xClientToken = "$timestampStr,$hash"
-
-        val xTrSignature = generateXTrSignature(
-            method = "POST",
-            accept = "application/json",
-            contentType = "application/json",
-            url = playUrl,
-            body = jsonBody,
-            useAltKey = true,
-            hardcodedTimestamp = fixedTime
-        )
-
-        val headers = mapOf(
-            "user-agent" to "com.community.mbox.in/50020042 (Linux; U; Android 16; en_IN; sdk_gphone64_x86_64; Build/BP22.250325.006; Cronet/133.0.6876.3)",
-            "accept" to "application/json",
-            "content-type" to "application/json",
-            "connection" to "keep-alive",
-            "x-client-token" to xClientToken,
-            "x-tr-signature" to xTrSignature,
-            "x-client-info" to """{"package_name":"com.community.mbox.in","version_name":"3.0.03.0529.03","version_code":50020042,"os":"android","os_version":"16","device_id":"$deviceId","install_store":"ps","gaid":"d7578036d13336cc","brand":"google","model":"${randomBrandModel()}","system_language":"en","net":"NETWORK_WIFI","region":"IN","timezone":"Asia/Calcutta","sp_code":""}""",
-            "x-client-status" to "0",
-            "x-play-mode" to "2"
-        )
-
-        return try {
-            val response = app.post(
-                playUrl,
-                headers = headers,
-                requestBody = jsonBody.toRequestBody("application/json".toMediaType())
-            ).parsed<JsonNode>()
-
-            val videoUrl = response.get("data")?.get("url")?.asText()
-            if (!videoUrl.isNullOrBlank()) {
-                callback.invoke(
-                    newExtractorLink(
-                        source = this.name,
-                        name = "MovieBox VIP Stream",
-                        url = videoUrl,
-                        referer = mainUrl,
-                        quality = Qualities.P1080.value,
-                        isM3u8 = videoUrl.contains(".m3u8")
-                    )
-                )
-                true
-            } else {
-                false
+    // Try to find a logo matching the language
+    if (!lang.isNullOrBlank()) {
+        for (i in 0 until logos.length()) {
+            val logo = logos.getJSONObject(i)
+            if (logo.optString("iso_639_1").equals(lang, ignoreCase = true)) {
+                val p = path(logo)
+                if (p.isNotBlank()) {
+                    return "$tmdbAPI/t/p/original$p"
+                }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            false
         }
     }
+
+    // Otherwise, just grab the first one
+    if (logos.length() > 0) {
+        val logo = logos.getJSONObject(0)
+        val p = path(logo)
+        if (p.isNotBlank()) {
+            return "$tmdbAPI/t/p/original$p"
+        }
+    }
+
+    return null
 }
