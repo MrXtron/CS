@@ -8,7 +8,7 @@ import org.jsoup.Jsoup
 import java.util.Calendar
 
 class HDMovie2Provider : MainAPI() {
-    override var mainUrl: String = "https://hdmovie2.com.se"
+    override var mainUrl: String = "https://newhdmovie2.asia"
     get() {
         return runBlocking {
             HDMovie2Plugin.getDomains()?.hdmovie2 ?: field
@@ -28,7 +28,9 @@ class HDMovie2Provider : MainAPI() {
     override val mainPage = mainPageOf(
         "release/${Calendar.getInstance().get(Calendar.YEAR)}" to "Latest",
         "genre/bollywood" to "BollyWood",
+        "genre/hollywood" to "Hollywood",
         "genre/hindi-dubbed" to "Hindi Dubbed",
+        "genre/netflix" to "NETFLIX",
         "genre/hindi-webseries" to "Hindi Web Series",
         "genre/adventure" to "Adventure",
         "genre/comedy" to "Comedy",
@@ -48,15 +50,14 @@ class HDMovie2Provider : MainAPI() {
         } catch (e: Exception) { }
     }
 
-    // FIX 1: MainPageRequest use kiya aur nullability handle ki
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         fixUrl()
         val url = if (page <= 1) "$mainUrl/${request.data}/" else "$mainUrl/${request.data}/page/$page/"
         val document = app.get(url).document
-        val items = document.select("div.items > article, div.result-item").mapNotNull {
-            val title = it.selectFirst("h3 > a, div.title > a")?.text() ?: return@mapNotNull null
-            val href = it.selectFirst("h3 > a, div.title > a")?.attr("href") ?: return@mapNotNull null
-            val posterUrl = it.selectFirst("img")?.attr("src")
+        val items = document.select("div.items > article, div.result-item, article.item, .animation-2").mapNotNull {
+            val title = it.selectFirst("h3 > a, div.title > a, h4 > a, .title a")?.text() ?: return@mapNotNull null
+            val href = it.selectFirst("h3 > a, div.title > a, h4 > a, .title a")?.attr("href") ?: return@mapNotNull null
+            val posterUrl = it.selectFirst("img")?.attr("src") ?: it.selectFirst("img")?.attr("data-src")
             newMovieSearchResponse(title, href, TvType.Movie) {
                 this.posterUrl = posterUrl
             }
@@ -67,10 +68,10 @@ class HDMovie2Provider : MainAPI() {
     override suspend fun search(query: String): List<SearchResponse> {
         fixUrl()
         val document = app.get("$mainUrl/?s=$query").document
-        return document.select("div.result-item").mapNotNull {
-            val title = it.selectFirst("div.title > a")?.text() ?: return@mapNotNull null
-            val href = it.selectFirst("div.title > a")?.attr("href") ?: return@mapNotNull null
-            val posterUrl = it.selectFirst("img")?.attr("src")
+        return document.select("div.result-item, article.item, .animation-2").mapNotNull {
+            val title = it.selectFirst("div.title > a, h3 > a, h4 > a, .title a")?.text() ?: return@mapNotNull null
+            val href = it.selectFirst("div.title > a, h3 > a, h4 > a, .title a")?.attr("href") ?: return@mapNotNull null
+            val posterUrl = it.selectFirst("img")?.attr("src") ?: it.selectFirst("img")?.attr("data-src")
             newMovieSearchResponse(title, href, TvType.Movie) {
                 this.posterUrl = posterUrl
             }
@@ -80,19 +81,18 @@ class HDMovie2Provider : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         fixUrl()
         val document = app.get(url).document
-        val title = document.selectFirst("div.data > h1")?.text() ?: return null
-        val poster = document.selectFirst("div.poster > img")?.attr("src")
-        val plot = document.selectFirst("div.wp-content > p")?.text()
-        val isTv = url.contains("/tvshows/") || document.selectFirst("ul.episodios") != null
+        val title = document.selectFirst("div.data > h1, h1.entry-title, .sheader h1")?.text() ?: return null
+        val poster = document.selectFirst("div.poster > img, .poster img")?.attr("src") ?: document.selectFirst("div.poster > img, .poster img")?.attr("data-src")
+        val plot = document.selectFirst("div.wp-content > p, #info p, .entry-content p")?.text()
+        val isTv = url.contains("/tvshows/") || url.contains("/seasons/") || document.selectFirst("ul.episodios, .list_episodes") != null
 
         return if (isTv) {
-            val episodes = document.select("ul.episodios > li").map {
+            val episodes = document.select("ul.episodios > li, .list_episodes li").map {
                 val href = it.selectFirst("a")?.attr("href") ?: ""
-                val name = it.selectFirst("div.episodiotitle > a")?.text() ?: ""
-                val num = it.selectFirst("div.numerando")?.text()?.split("-")
+                val name = it.selectFirst("div.episodiotitle > a, .episodiotitle a")?.text() ?: ""
+                val num = it.selectFirst("div.numerando, .numerando")?.text()?.split("-")
                 val s = num?.firstOrNull()?.replace(Regex("[^0-9]"), "")?.toIntOrNull()
                 val e = num?.lastOrNull()?.replace(Regex("[^0-9]"), "")?.toIntOrNull()
-                // FIX 2: newEpisode use kiya constructor ki jagah
                 newEpisode(href) {
                     this.name = name
                     this.season = s
@@ -118,10 +118,10 @@ class HDMovie2Provider : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         val document = app.get(data).document
-        val id = document.selectFirst("ul#playeroptionsul > li")?.attr("data-post") ?: return false
-        val type = if (data.contains("/movies/")) "movie" else "tv"
+        val id = document.selectFirst("ul#playeroptionsul > li, #playeroptionsul li")?.attr("data-post") ?: return false
+        val type = if (data.contains("/movies/") || data.contains("/movie/")) "movie" else "tv"
 
-        document.select("ul#playeroptionsul > li").forEach { li ->
+        document.select("ul#playeroptionsul > li, #playeroptionsul li").forEach { li ->
             val nume = li.attr("data-nume")
             val response = app.post(
                 url = "$mainUrl/wp-admin/admin-ajax.php",
