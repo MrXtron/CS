@@ -1,10 +1,10 @@
 // use an integer for version numbers
-version = 4
+version = 5
 
 
 cloudstream {
     language = "hi"
-    description = "BollyZone"
+    description = "Tv Shows Provider"
     authors = listOf("MrXtron")
 
     status = 1 

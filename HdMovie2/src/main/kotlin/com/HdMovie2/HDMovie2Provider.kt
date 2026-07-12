@@ -81,8 +81,14 @@ class HDMovie2Provider : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         fixUrl()
         val document = app.get(url).document
-        val title = document.selectFirst("div.data > h1, h1.entry-title, .sheader h1")?.text() ?: return null
-        val poster = document.selectFirst("div.poster > img, .poster img")?.attr("src") ?: document.selectFirst("div.poster > img, .poster img")?.attr("data-src")
+        val title = document.selectFirst("div.data > h1, h1.entry-title, .sheader h1, meta[itemprop='name']")?.let {
+            if (it.tagName() == "meta") it.attr("content") else it.text()
+        } ?: return null
+        
+        val poster = document.selectFirst("div.poster > img, .poster img, meta[itemprop='image']")?.let {
+            if (it.tagName() == "meta") it.attr("content") else (it.attr("src").ifEmpty { it.attr("data-src") })
+        }
+        
         val plot = document.selectFirst("div.wp-content > p, #info p, .entry-content p")?.text()
         val isTv = url.contains("/tvshows/") || url.contains("/seasons/") || document.selectFirst("ul.episodios, .list_episodes") != null
 
@@ -118,24 +124,72 @@ class HDMovie2Provider : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         val document = app.get(data).document
-        val id = document.selectFirst("ul#playeroptionsul > li, #playeroptionsul li")?.attr("data-post") ?: return false
-        val type = if (data.contains("/movies/") || data.contains("/movie/")) "movie" else "tv"
+        var linkFound = false
 
-        document.select("ul#playeroptionsul > li, #playeroptionsul li").forEach { li ->
-            val nume = li.attr("data-nume")
-            val response = app.post(
-                url = "$mainUrl/wp-admin/admin-ajax.php",
-                data = mapOf("action" to "doo_player_ajax", "post" to id, "nume" to nume, "type" to type),
-                headers = mapOf("X-Requested-With" to "XMLHttpRequest")
-            ).text
-            
-            val embedUrl = AppUtils.tryParseJson<ResponseHash>(response)?.embed_url
-            val source = embedUrl?.let { Jsoup.parse(it).select("iframe").attr("src") }
-            if (!source.isNullOrEmpty() && !source.contains("youtube")) {
-                loadExtractor(source, "$mainUrl/", subtitleCallback, callback)
+        document.select(".options ul li, ul#playeroptionsul > li, #playeroptionsul li").forEach { li ->
+            val embedData = li.attr("data-source-embed").ifEmpty { li.attr("data-embed") }
+            if (embedData.isNotEmpty()) {
+                val parsedHtml = Jsoup.parse(embedData)
+                val src = parsedHtml.selectFirst("iframe")?.attr("src")
+                if (!src.isNullOrEmpty() && !src.contains("youtube")) {
+                    loadExtractor(src, data, subtitleCallback, callback)
+                    linkFound = true
+                }
             }
         }
-        return true
+
+        val firstEmbedData = document.selectFirst("#player-backdrop-preview")?.attr("data-first-embed")
+        if (!firstEmbedData.isNullOrEmpty()) {
+            val parsedHtml = Jsoup.parse(firstEmbedData)
+            val src = parsedHtml.selectFirst("iframe")?.attr("src")
+            if (!src.isNullOrEmpty() && !src.contains("youtube")) {
+                loadExtractor(src, data, subtitleCallback, callback)
+                linkFound = true
+            }
+        }
+
+        document.select("iframe").forEach { iframe ->
+            val src = iframe.attr("src")
+            if (src.isNotEmpty() && !src.contains("youtube")) {
+                loadExtractor(src, data, subtitleCallback, callback)
+                linkFound = true
+            }
+        }
+
+        val id = document.selectFirst("ul#playeroptionsul > li, #playeroptionsul li")?.attr("data-post")
+        val type = if (data.contains("/movies/") || data.contains("/movie/")) "movie" else "tv"
+
+        if (id != null) {
+            document.select("ul#playeroptionsul > li, #playeroptionsul li").forEach { li ->
+                try {
+                    val nume = li.attr("data-nume")
+                    val response = app.post(
+                        url = "$mainUrl/wp-admin/admin-ajax.php",
+                        data = mapOf("action" to "doo_player_ajax", "post" to id, "nume" to nume, "type" to type),
+                        headers = mapOf("X-Requested-With" to "XMLHttpRequest", "Referer" to data)
+                    ).text
+
+                    if (response.isNotEmpty() && response.contains("embed_url")) {
+                        val embedUrl = AppUtils.tryParseJson<ResponseHash>(response)?.embed_url
+                        val source = embedUrl?.let { Jsoup.parse(it).select("iframe").attr("src") }
+                        if (!source.isNullOrEmpty() && !source.contains("youtube")) {
+                            loadExtractor(source, "$mainUrl/", subtitleCallback, callback)
+                            linkFound = true
+                        }
+                    }
+                } catch (e: Exception) { }
+            }
+        }
+
+        document.select(".wp-content a.action-view-dl, a[href*='embed'], a[href*='player']").forEach { a ->
+            val href = a.attr("href")
+            if (href.isNotEmpty() && !href.contains("youtube") && href.startsWith("http")) {
+                loadExtractor(href, data, subtitleCallback, callback)
+                linkFound = true
+            }
+        }
+
+        return linkFound
     }
 
     data class ResponseHash(@JsonProperty("embed_url") val embed_url: String? = null)
