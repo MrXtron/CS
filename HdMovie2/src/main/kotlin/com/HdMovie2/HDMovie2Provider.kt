@@ -142,11 +142,11 @@ class HDMovie2Provider : MainAPI() {
 
                         if (rawUrl.isNotEmpty() && rawUrl.startsWith("http")) {
                             callback.invoke(
-                                ExtractorLink(
-                                    source = "Ultra Stream",
-                                    name = "Ultra Stream High Speed",
-                                    url = rawUrl,
-                                    referer = iframeSrc,
+                                newExtractorLink(
+                                    "Ultra Stream",
+                                    "Ultra Stream High Speed",
+                                    rawUrl,
+                                    iframeSrc,
                                     quality = Qualities.P1080.value,
                                     isM3u8 = rawUrl.contains(".m3u8")
                                 )
