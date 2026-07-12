@@ -125,35 +125,60 @@ class HDMovie2Provider : MainAPI() {
     ): Boolean {
         val document = app.get(data).document
         var linkFound = false
+        val extractedUrls = mutableSetOf<String>()
+
+        fun extractAndLoad(iframeSrc: String) {
+            if (iframeSrc.isEmpty() || iframeSrc.contains("youtube") || extractedUrls.contains(iframeSrc)) return
+            extractedUrls.add(iframeSrc)
+            
+            runBlocking {
+                try {
+                    if (iframeSrc.contains("hdm2.ink") || iframeSrc.contains("prvs.top")) {
+                        val playerDoc = app.get(iframeSrc, headers = mapOf("Referer" to data)).document
+                        
+                        val rawUrl = playerDoc.selectFirst("video, source")?.attr("src")
+                            ?: playerDoc.html().substringAfter("file:\"", "").substringBefore("\"", "")
+                            ?: playerDoc.html().substringAfter("source: '", "").substringBefore("'", "")
+
+                        if (rawUrl.isNotEmpty() && rawUrl.startsWith("http")) {
+                            callback.invoke(
+                                ExtractorLink(
+                                    source = "Ultra Stream",
+                                    name = "Ultra Stream High Speed",
+                                    url = rawUrl,
+                                    referer = iframeSrc,
+                                    quality = Qualities.P1080.value,
+                                    isM3u8 = rawUrl.contains(".m3u8")
+                                )
+                            )
+                            linkFound = true
+                        }
+                    } else {
+                        loadExtractor(iframeSrc, data, subtitleCallback, callback)
+                        linkFound = true
+                    }
+                } catch (e: Exception) { }
+            }
+        }
 
         document.select(".options ul li, ul#playeroptionsul > li, #playeroptionsul li").forEach { li ->
             val embedData = li.attr("data-source-embed").ifEmpty { li.attr("data-embed") }
             if (embedData.isNotEmpty()) {
                 val parsedHtml = Jsoup.parse(embedData)
-                val src = parsedHtml.selectFirst("iframe")?.attr("src")
-                if (!src.isNullOrEmpty() && !src.contains("youtube")) {
-                    loadExtractor(src, data, subtitleCallback, callback)
-                    linkFound = true
-                }
+                parsedHtml.selectFirst("iframe")?.attr("src")?.let { extractAndLoad(it) }
             }
         }
 
-        val firstEmbedData = document.selectFirst("#player-backdrop-preview")?.attr("data-first-embed")
-        if (!firstEmbedData.isNullOrEmpty()) {
-            val parsedHtml = Jsoup.parse(firstEmbedData)
-            val src = parsedHtml.selectFirst("iframe")?.attr("src")
-            if (!src.isNullOrEmpty() && !src.contains("youtube")) {
-                loadExtractor(src, data, subtitleCallback, callback)
-                linkFound = true
+        document.selectFirst("#player-backdrop-preview")?.attr("data-first-embed")?.let { firstEmbedData ->
+            if (firstEmbedData.isNotEmpty()) {
+                val parsedHtml = Jsoup.parse(firstEmbedData)
+                parsedHtml.selectFirst("iframe")?.attr("src")?.let { extractAndLoad(it) }
             }
         }
 
         document.select("iframe").forEach { iframe ->
             val src = iframe.attr("src")
-            if (src.isNotEmpty() && !src.contains("youtube")) {
-                loadExtractor(src, data, subtitleCallback, callback)
-                linkFound = true
-            }
+            extractAndLoad(src)
         }
 
         val id = document.selectFirst("ul#playeroptionsul > li, #playeroptionsul li")?.attr("data-post")
@@ -172,10 +197,7 @@ class HDMovie2Provider : MainAPI() {
                     if (response.isNotEmpty() && response.contains("embed_url")) {
                         val embedUrl = AppUtils.tryParseJson<ResponseHash>(response)?.embed_url
                         val source = embedUrl?.let { Jsoup.parse(it).select("iframe").attr("src") }
-                        if (!source.isNullOrEmpty() && !source.contains("youtube")) {
-                            loadExtractor(source, "$mainUrl/", subtitleCallback, callback)
-                            linkFound = true
-                        }
+                        source?.let { extractAndLoad(it) }
                     }
                 } catch (e: Exception) { }
             }
@@ -184,8 +206,7 @@ class HDMovie2Provider : MainAPI() {
         document.select(".wp-content a.action-view-dl, a[href*='embed'], a[href*='player']").forEach { a ->
             val href = a.attr("href")
             if (href.isNotEmpty() && !href.contains("youtube") && href.startsWith("http")) {
-                loadExtractor(href, data, subtitleCallback, callback)
-                linkFound = true
+                extractAndLoad(href)
             }
         }
 
