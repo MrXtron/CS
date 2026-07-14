@@ -6,6 +6,7 @@ import kotlinx.coroutines.runBlocking
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.jsoup.Jsoup
 import java.util.Calendar
+import android.util.Log
 
 class HDMovie2Provider : MainAPI() {
     override var mainUrl: String = "https://newhdmovie2.asia"
@@ -149,10 +150,9 @@ class HDMovie2Provider : MainAPI() {
                                 "Ultra Stream High Speed",
                                 rawUrl,
                                 data,
+                                Qualities.P1080,
                                 linkType
-                            ) {
-                                this.quality = Qualities.P1080.value
-                            }
+                            )
                         )
                         linkFound = true
                     }
