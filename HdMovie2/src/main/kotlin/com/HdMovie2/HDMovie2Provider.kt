@@ -141,13 +141,13 @@ class HDMovie2Provider : MainAPI() {
                             ?: playerDoc.html().substringAfter("source: '", "").substringBefore("'", "")
 
                         if (rawUrl.isNotEmpty() && rawUrl.startsWith("http")) {
+                            val linkType = if (rawUrl.contains(".m3u8")) ExtractorLinkType.M3U8 else INFER_TYPE
                             callback.invoke(
                                 newExtractorLink(
                                     "Ultra Stream",
                                     "Ultra Stream High Speed",
                                     rawUrl,
-                                    iframeSrc,
-                                    isM3u8 = rawUrl.contains(".m3u8")
+                                    linkType
                                 ) {
                                     this.quality = Qualities.P1080.value
                                 }
