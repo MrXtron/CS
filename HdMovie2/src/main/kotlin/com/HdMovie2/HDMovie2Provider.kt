@@ -150,9 +150,10 @@ class HDMovie2Provider : MainAPI() {
                                 "Ultra Stream High Speed",
                                 rawUrl,
                                 data,
-                                Qualities.P1080,
                                 linkType
-                            )
+                            ) {
+                                this.quality = Qualities.P1080.value
+                            }
                         )
                         linkFound = true
                     }
