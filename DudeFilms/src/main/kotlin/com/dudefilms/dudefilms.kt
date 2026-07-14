@@ -55,6 +55,7 @@ class Dudefilms : MainAPI() {
         "category/southindian/" to "South Indian",
         "category/webseries/" to "Web Series",
         "category/netfilx-webseries/" to "Netflix Series",
+        "category/hotstar-webseries/" to "Hotstar Series",
         "category/amazon-web-series/" to "Amazon Series",
         "category/zee5-webseries/" to "Zee5 Series",
         "category/sony-liv/" to "SonyLiv Series",
