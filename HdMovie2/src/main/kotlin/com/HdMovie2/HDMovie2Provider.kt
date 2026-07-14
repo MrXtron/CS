@@ -127,87 +127,84 @@ class HDMovie2Provider : MainAPI() {
         var linkFound = false
         val extractedUrls = mutableSetOf<String>()
 
-        fun extractAndLoad(iframeSrc: String) {
+        suspend fun extractAndLoad(iframeSrc: String) {
             if (iframeSrc.isEmpty() || iframeSrc.contains("youtube") || extractedUrls.contains(iframeSrc)) return
-            extractedUrls.add(iframeSrc)
             
-            runBlocking {
-                try {
-                    if (iframeSrc.contains("hdm2.ink") || iframeSrc.contains("prvs.top")) {
-                        val playerDoc = app.get(iframeSrc, headers = mapOf("Referer" to data)).document
-                        
-                        val rawUrl = playerDoc.selectFirst("video, source")?.attr("src")
-                            ?: playerDoc.html().substringAfter("file:\"", "").substringBefore("\"", "")
-                            ?: playerDoc.html().substringAfter("source: '", "").substringBefore("'", "")
+            val fixedSrc = if (iframeSrc.startsWith("//")) "https:$iframeSrc" else iframeSrc
+            extractedUrls.add(fixedSrc)
+            
+            try {
+                if (fixedSrc.contains("hdm2") || fixedSrc.contains("prvs") || fixedSrc.contains("bar") || fixedSrc.contains("online")) {
+                    val playerDoc = app.get(fixedSrc, headers = mapOf("Referer" to data)).document
+                    
+                    val rawUrl = playerDoc.selectFirst("video, source")?.attr("src")
+                        ?: playerDoc.html().substringAfter("file:\"", "").substringBefore("\"", "")
+                        ?: playerDoc.html().substringAfter("source: '", "").substringBefore("'", "")
 
-                        if (rawUrl.isNotEmpty() && rawUrl.startsWith("http")) {
-                            val linkType = if (rawUrl.contains(".m3u8")) ExtractorLinkType.M3U8 else INFER_TYPE
-                            callback.invoke(
-                                newExtractorLink(
-                                    "Ultra Stream",
-                                    "Ultra Stream High Speed",
-                                    rawUrl,
-                                    linkType
-                                ) {
-                                    this.quality = Qualities.P1080.value
-                                }
-                            )
-                            linkFound = true
-                        }
-                    } else {
-                        loadExtractor(iframeSrc, data, subtitleCallback, callback)
+                    if (rawUrl.isNotEmpty() && rawUrl.startsWith("http")) {
+                        val linkType = if (rawUrl.contains(".m3u8")) ExtractorLinkType.M3U8 else INFER_TYPE
+                        callback.invoke(
+                            newExtractorLink(
+                                "Ultra Stream",
+                                "Ultra Stream High Speed",
+                                rawUrl,
+                                data,
+                                linkType
+                            ) {
+                                this.quality = Qualities.P1080.value
+                            }
+                        )
                         linkFound = true
                     }
-                } catch (e: Exception) { }
+                } else {
+                    loadExtractor(fixedSrc, data, subtitleCallback, callback)
+                    linkFound = true
+                }
+            } catch (e: Exception) {
+                Log.e("HDMovie2Error", "Error extraction: ${e.localizedMessage}")
             }
+        }
+
+        fun decodeHtmlEntities(input: String): String {
+            return input
+                .replace("&lt;", "<")
+                .replace("&gt;", ">")
+                .replace("&quot;", "\"")
+                .replace("&amp;", "&")
         }
 
         document.select(".options ul li, ul#playeroptionsul > li, #playeroptionsul li").forEach { li ->
             val embedData = li.attr("data-source-embed").ifEmpty { li.attr("data-embed") }
             if (embedData.isNotEmpty()) {
-                val parsedHtml = Jsoup.parse(embedData)
-                parsedHtml.selectFirst("iframe")?.attr("src")?.let { extractAndLoad(it) }
+                val decodedHtml = decodeHtmlEntities(embedData)
+                val parsedHtml = Jsoup.parse(decodedHtml)
+                parsedHtml.selectFirst("iframe")?.attr("src")?.let { 
+                    runBlocking { extractAndLoad(it) } 
+                }
             }
         }
 
         document.selectFirst("#player-backdrop-preview")?.attr("data-first-embed")?.let { firstEmbedData ->
             if (firstEmbedData.isNotEmpty()) {
-                val parsedHtml = Jsoup.parse(firstEmbedData)
-                parsedHtml.selectFirst("iframe")?.attr("src")?.let { extractAndLoad(it) }
+                val decodedHtml = decodeHtmlEntities(firstEmbedData)
+                val parsedHtml = Jsoup.parse(decodedHtml)
+                parsedHtml.selectFirst("iframe")?.attr("src")?.let { 
+                    runBlocking { extractAndLoad(it) } 
+                }
             }
         }
 
         document.select("iframe").forEach { iframe ->
-            val src = iframe.attr("src")
-            extractAndLoad(src)
-        }
-
-        val id = document.selectFirst("ul#playeroptionsul > li, #playeroptionsul li")?.attr("data-post")
-        val type = if (data.contains("/movies/") || data.contains("/movie/")) "movie" else "tv"
-
-        if (id != null) {
-            document.select("ul#playeroptionsul > li, #playeroptionsul li").forEach { li ->
-                try {
-                    val nume = li.attr("data-nume")
-                    val response = app.post(
-                        url = "$mainUrl/wp-admin/admin-ajax.php",
-                        data = mapOf("action" to "doo_player_ajax", "post" to id, "nume" to nume, "type" to type),
-                        headers = mapOf("X-Requested-With" to "XMLHttpRequest", "Referer" to data)
-                    ).text
-
-                    if (response.isNotEmpty() && response.contains("embed_url")) {
-                        val embedUrl = AppUtils.tryParseJson<ResponseHash>(response)?.embed_url
-                        val source = embedUrl?.let { Jsoup.parse(it).select("iframe").attr("src") }
-                        source?.let { extractAndLoad(it) }
-                    }
-                } catch (e: Exception) { }
+            val src = iframe.attr("src").ifEmpty { iframe.attr("data-src") }
+            if (src.isNotEmpty()) {
+                runBlocking { extractAndLoad(src) }
             }
         }
 
         document.select(".wp-content a.action-view-dl, a[href*='embed'], a[href*='player']").forEach { a ->
             val href = a.attr("href")
             if (href.isNotEmpty() && !href.contains("youtube") && href.startsWith("http")) {
-                extractAndLoad(href)
+                runBlocking { extractAndLoad(href) }
             }
         }
 
