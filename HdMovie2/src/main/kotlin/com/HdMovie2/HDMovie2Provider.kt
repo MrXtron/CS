@@ -147,9 +147,10 @@ class HDMovie2Provider : MainAPI() {
                                     "Ultra Stream High Speed",
                                     rawUrl,
                                     iframeSrc,
-                                    quality = Qualities.P1080.value,
                                     isM3u8 = rawUrl.contains(".m3u8")
-                                )
+                                ) {
+                                    this.quality = Qualities.P1080.value
+                                }
                             )
                             linkFound = true
                         }
