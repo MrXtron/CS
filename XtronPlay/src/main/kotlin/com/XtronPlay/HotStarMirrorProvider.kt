@@ -228,43 +228,20 @@ class HotStarMirrorProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val (title, id) = parseJson<LoadData>(data)
-        val cookies = mapOf(
-            "t_hash_t" to cookie_value,
-            "hd" to "on",
-            "ott" to "hs"
+        val apiBase = resolveApiUrl()
+        val id = parseJson<LoadData>(data).id
+        val response = app.get(
+            "$apiBase/newtv/player.php?id=$id",
+            headers = buildNewTvHeaders("hs", mapOf("Usertoken" to ""))
+        ).parsed<NewTvPlayerResponse>()
+
+        if (response.status != "ok" || response.video_link.isNullOrBlank()) return false
+
+        callback.invoke(
+            newExtractorLink(name, name, response.video_link, type = ExtractorLinkType.M3U8) {
+                this.referer = response.referer ?: apiBase
+            }
         )
-        val playlist = app.get(
-            "$mainUrl/mobile/hs/playlist.php?id=$id&t=$title&tm=${APIHolder.unixTime}",
-            headers,
-            referer = "$mainUrl/home",
-            cookies = cookies
-        ).parsed<PlayList>()
-
-        playlist.forEach { item ->
-            item.sources.forEach {
-                callback.invoke(
-                    newExtractorLink(
-                        name,
-                        it.label,
-                        "$mainUrl/${it.file}",
-                        type = ExtractorLinkType.M3U8
-                    ) {
-                        this.referer = "$mainUrl/home"
-                        this.quality = getQualityFromName(it.file.substringAfter("q=", ""))
-                    }
-                )
-            }
-
-            item.tracks?.filter { it.kind == "captions" }?.map { track ->
-                subtitleCallback.invoke(
-                    newSubtitleFile(
-                        track.label.toString(),
-                        httpsify(track.file.toString())
-                    )
-                )
-            }
-        }
 
         return true
     }

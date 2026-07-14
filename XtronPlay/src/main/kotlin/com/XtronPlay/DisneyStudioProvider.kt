@@ -222,29 +222,20 @@ open class DisneyStudioProvider(
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val (title, id) = parseJson<LoadData>(data)
-        val playlist = app.get(
-            "$mainUrl/mobile/hs/playlist.php?id=$id&t=$title&tm=${APIHolder.unixTime}",
-            headers,
-            referer = "$mainUrl/home",
-            cookies = buildCookies()
-        ).parsed<PlayList>()
+        val apiBase = resolveApiUrl()
+        val id = parseJson<LoadData>(data).id
+        val response = app.get(
+            "$apiBase/newtv/player.php?id=$id",
+            headers = buildNewTvHeaders("hs", mapOf("Usertoken" to ""))
+        ).parsed<NewTvPlayerResponse>()
 
-        playlist.forEach { item ->
-            item.sources.forEach {
-                callback.invoke(
-                    newExtractorLink(
-                        name,
-                        it.label,
-                        "$mainUrl/${it.file}",
-                        type = ExtractorLinkType.M3U8
-                    ) {
-                        this.referer = "$mainUrl/home"
-                        this.quality = getQualityFromName(it.file.substringAfter("q=", ""))
-                    }
-                )
+        if (response.status != "ok" || response.video_link.isNullOrBlank()) return false
+
+        callback.invoke(
+            newExtractorLink(name, name, response.video_link, type = ExtractorLinkType.M3U8) {
+                this.referer = response.referer ?: apiBase
             }
-        }
+        )
 
         return true
     }
