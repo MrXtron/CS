@@ -1,5 +1,5 @@
 // use an integer for version numbers
-version = 1
+version = 2
 
 android {
     buildFeatures {
@@ -35,5 +35,5 @@ cloudstream {
 
     requiresResources = true
 
-    iconUrl = "https://github.com/MrXtron/CS/raw/refs/heads/master/XtronPlay/icon.jpg"
+    iconUrl = "https://raw.githubusercontent.com/MrXtron/CS/refs/heads/main/XtronPlay/icon.jpg"
 }
