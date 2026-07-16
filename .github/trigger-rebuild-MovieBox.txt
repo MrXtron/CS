@@ -1,0 +1,5 @@
+Triggering rebuild for MovieBox after fixing SettingsFragment import.
+
+This file is created automatically by Copilot to trigger GitHub Actions.
+
+Timestamp: 2026-07-16T07:52:00Z
