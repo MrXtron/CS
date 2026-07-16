@@ -1,5 +1,5 @@
 // use an integer for version numbers
-version = 8
+version = 9
 
 android {
     buildFeatures {
@@ -7,12 +7,19 @@ android {
     }
 }
 
+dependencies {
+    val cloudstream by configurations
+    implementation("androidx.appcompat:appcompat:1.7.1")
+    implementation("com.google.android.material:material:1.14.0")
+    cloudstream("com.lagradost:cloudstream3:pre-release")
+}
+
 cloudstream {
     language = "hi"
     // All of these properties are optional, you can safely remove them
 
     description = "Multi Language Movies and Series Provider"
-    authors = listOf("NivinCNC,Phisher98")
+    authors = listOf("MrXtron,NivinCNC,Phisher98")
 
     /**
      * Status int as the following:
@@ -26,6 +33,7 @@ cloudstream {
         "Movie",
         "TvSeries"
     )
+    requiresResources = true
 
     iconUrl = "https://raw.githubusercontent.com/MrXtron/CSF/refs/heads/main/Icons/MovieBox.png"
 

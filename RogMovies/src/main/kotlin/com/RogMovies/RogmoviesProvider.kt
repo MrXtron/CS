@@ -60,8 +60,7 @@ open class RogmoviesProvider : MainAPI() {
         "$mainUrl/category/web-series/jiohotstar/page/%d/" to "JioHotstar",
         "$mainUrl/category/web-series/amazon-prime-video/page/%d/" to "Amazon Prime",
         "$mainUrl/category/web-series/zee5-originals/page/%d/" to "Zee5",
-        "$mainUrl/category/web-series/sonyliv/page/%d/" to "SonyLIV",
-        "$mainUrl/category/mx-original/page/%d/" to "Amazon MX Player"
+        "$mainUrl/category/web-series/sonyliv/page/%d/" to "SonyLIV"
     )
 
     override suspend fun getMainPage(
