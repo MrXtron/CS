@@ -60,8 +60,7 @@ class Dudefilms : MainAPI() {
         "category/zee5-webseries/" to "Zee5 Series",
         "category/sony-liv/" to "SonyLiv Series",
         "category/dual-audio/" to "Dual Audio",
-        "category/fan-dubbed/" to "Fan Dubbed",
-        "category/adult/" to "Adult",
+        "category/fan-dubbed/" to "Fan Dubbed"
     )
 
     override suspend fun getMainPage(
